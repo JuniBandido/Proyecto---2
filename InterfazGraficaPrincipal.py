@@ -22,6 +22,12 @@ textocontrasenia.pack(pady=0)
 entradacontrasenia = tk.Entry(ventanaLogin, width=35, show="*", font=("Arial", 15))
 entradacontrasenia.pack(pady=0)
 
+def botonCerrar(ventana):
+    boton_cerrar = tk.Button(ventana, text="X", command=ventana.destroy, bg="red", fg="white")
+    boton_cerrar.place(x=1520, y=0)
+
+botonCerrar(ventanaLogin)
+
 def iniciarSesion():
     if entradalogn.get() == "EST1619125" and entradacontrasenia.get() == "123":
         ventanaMenu = tk.Tk()
@@ -30,6 +36,11 @@ def iniciarSesion():
 
         textopaginaLogin = tk.Label(ventanaMenu, text="Bienvenido", font=("Times New Roman", 40), bg="gray")
         textopaginaLogin.pack(pady=60)
+
+        textopaginaLogin2 = tk.Label(ventanaMenu, text="Este es la pagina de login", font=("Times New Roman", 40), bg="gray")
+        textopaginaLogin2.pack(pady=60, padx=30)
+
+        botonCerrar(ventanaMenu)
 
         ventanaLogin.destroy()
     else:
