@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 
 ventanaLogin = tk.Tk()
 ventanaLogin.attributes('-fullscreen', True)
@@ -44,8 +45,7 @@ def iniciarSesion():
 
         ventanaLogin.destroy()
     else:
-        textoError = tk.Label(ventanaLogin, text="¡Codigo o contraseña incorrecta!", font=("Arial", 15), bg="gray", fg="red")
-        textoError.pack(pady=25)
+        messagebox.showerror("Error", "Codigo o contraseña incorrectos")
 
 botonlogn = tk.Button(ventanaLogin, text="Iniciar sesión", font=("Arial", 20), bg="red", command=iniciarSesion)
 botonlogn.pack(pady=50)
