@@ -3,6 +3,7 @@
 #Tienda de Materiales Electricos
 
 from collections import deque
+from datetime import datetime
 
 
 #ESTRUCTURAS DE DATOS - CLASES BASE
@@ -85,7 +86,7 @@ class Product: #Clase para representar un producto en el inventario
         return f"{self._code} - {self._name} ({self._brand}) - Q{self._price:.2f} - Stock: {self._quantity}"
 
 class User:
-    #Clase para representar usuarios del sistema - ENCAPSULAMIENTO: Password privada, verificación mediante metodo
+    #Clase para representar usuarios del sistema
 
     def __init__(self, username, password, role, full_name):
         self._username, self._password, self._role, self._full_name = username, password, role, full_name
@@ -128,4 +129,36 @@ class User:
 
     def __str__(self):
         return f"{self._username} - {self._full_name} ({self._role})"
+
+class Sale:
+    #Clase para representar una venta
+
+    def __init__(self, sale_id, username, products, total):
+        self._sale_id = sale_id
+        self._username = username
+        self._products = products
+        self._total = total
+        self._date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    @property
+    def sale_id(self):
+        return self._sale_id
+
+    @property
+    def username(self):
+        return self._username
+
+    @property
+    def products(self):
+        return self._products.copy()  # Retorna copia para evitar modificación externa
+
+    @property
+    def total(self):
+        return self._total
+
+    @property
+    def date(self):
+        return self._date
+
+    def __str__(self): return f"Venta #{self._sale_id} - {self._date} - Q{self._total:.2f}"
 
