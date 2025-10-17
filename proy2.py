@@ -162,3 +162,4 @@ class Sale:
 
     def __str__(self): return f"Venta #{self._sale_id} - {self._date} - Q{self._total:.2f}"
 
+
