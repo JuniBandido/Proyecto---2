@@ -71,3 +71,17 @@ class Product: #Clase para representar un producto en el inventario
     def description(self, value):
         self._description = value
 
+    def reduce_stock(self, amount):
+        #Metodo para reducir stock de forma ordenada
+        if amount <= self._quantity: self._quantity -= amount; return True
+        return False
+
+    def add_stock(self, amount):
+       #Metodo para agregar stock
+        if amount > 0: self._quantity += amount; return True
+        return False
+
+    def __str__(self):
+        return f"{self._code} - {self._name} ({self._brand}) - Q{self._price:.2f} - Stock: {self._quantity}"
+
+
