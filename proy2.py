@@ -84,4 +84,37 @@ class Product: #Clase para representar un producto en el inventario
     def __str__(self):
         return f"{self._code} - {self._name} ({self._brand}) - Q{self._price:.2f} - Stock: {self._quantity}"
 
+class User:
+    #Clase para representar usuarios del sistema - ENCAPSULAMIENTO: Password privada, verificación mediante metodo
+
+    def __init__(self, username, password, role, full_name):
+        self._username, self._password, self._role, self._full_name = username, password, role, full_name
+        self._active = True
+
+    # Getters
+    @property
+    def username(self):
+        return self._username
+
+    @property
+    def role(self):
+        return self._role
+
+    @property
+    def full_name(self):
+        return self._full_name
+
+    @property
+    def active(self):
+        return self._active
+
+    # Setters
+    @active.setter
+    def active(self, value):
+        self._active = value
+
+    @full_name.setter
+    def full_name(self, value):
+        if value and len(value) > 0: self._full_name = value
+
 
