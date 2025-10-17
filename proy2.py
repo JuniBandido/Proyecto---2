@@ -117,4 +117,15 @@ class User:
     def full_name(self, value):
         if value and len(value) > 0: self._full_name = value
 
+    def verify_password(self, password):
+        #Metodo público para verificar password sin exponer el atributo privado
+        return self._password == password
+
+    def change_password(self, old_password, new_password):
+        #Permite cambiar la contraseña de forma segura
+        if self.verify_password(old_password): self._password = new_password; return True
+        return False
+
+    def __str__(self):
+        return f"{self._username} - {self._full_name} ({self._role})"
 
