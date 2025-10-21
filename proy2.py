@@ -182,3 +182,22 @@ class Stack:
         self._items = []
     def show_all(self):
         return self._items.copy #Aca retornamos la copia para proteger sus datos
+
+class Queue:
+    #Implementacion de cola
+    def __init__(self):
+        self._items = deque
+    def enqueue(self, item):
+        self._items.append(item)
+    def dequeue(self):
+        return self._items.popleft() if not self.is_empty() else None
+    def front(self):
+        return self._items[0] if not self.is_empty() else None
+    def is_empty(self):
+        return len(self._items) == 0
+    def size(self):
+        return len(self._items)
+    def clear(self):
+        self._items.clear()
+    def show_all(self):
+        return list(self._items)  # Retorna copia
