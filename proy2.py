@@ -201,3 +201,54 @@ class Queue:
         self._items.clear()
     def show_all(self):
         return list(self._items)  # Retorna copia
+
+#Sistema principal, gestor de inventario
+class InventorySystem:
+    #Sistema principal de gestion de inventario
+    def __init__(self):
+        self._products = []
+        self._users = []
+        self._sales = [] #Para los datos
+        self._sale_counter = 1 #Contador para los ID de ventas
+        self._action = Stack() #Historial de acciones
+        self._pending_tasks = Queue() #Historial de tareas pendientes
+        self._current_user = None #Usuario actual
+        self._initialize_default_data()
+
+    def _initialize_default_data(self): #Es protegido para solo llamarlo internamente
+        #Creamos usuarios
+        self._users.extend([
+            User("admin", "admin123", "administrador", "Administrador Principal"),
+            User("vendedor", "vend123", "dependiente", "Juan Perez")
+        ])
+        #Creamos productos de prueba
+        productos_ejemplo = [
+            Product("BOMB-LED-9W", "Bombillo LED 9W", "Iluminación", 25.50, 50, "Philips", "Luz día 6500K E27"),
+            Product("TUBO-LED-4P", "Tubo LED 4 Pies", "Iluminación", 45.00, 30, "Sylvania", "Blanco frío 18W T8"),
+            Product("LAMP-LED-PANEL", "Panel LED 600x600", "Iluminación", 180.00, 15, "Osram", "36W para cielo falso"),
+            Product("SPOT-LED-5W", "Spot LED Empotrable", "Iluminación", 32.00, 40, "Technolite", "5W 3000K GU10"),
+            Product("TOMA-DOBLE-15A", "Tomacorriente Doble 15A", "Accesorios", 18.75, 100, "Steck", "Blanco polar 250V"),
+            Product("APAG-SIMPLE-15A", "Apagador Simple 15A", "Accesorios", 12.50, 80, "Legrand", "Blanco mate"),
+            Product("BREAKER-20A", "Breaker 20A 1P", "Accesorios", 45.00, 60, "Square D", "Para tablero principal"),
+            Product("CAJA-RECT-4x2", "Caja Rectangular 4x2", "Accesorios", 8.00, 120, "Conductores", "Para apagadores"),
+            Product("CABLE-TW-12", "Cable TW Calibre 12", "Cables", 3.50, 500, "Condumex", "75m rollo negro"),
+            Product("CABLE-THWN-10", "Cable THWN Calibre 10", "Cables", 5.25, 300, "Camesa", "75m rollo rojo"),
+            Product("CABLE-PAR-TRENZ", "Cable Par Trenzado CAT6", "Cables", 1.20, 200, "Belden", "305m caja datos"),
+            Product("CABLE-COAX-RG6", "Cable Coaxial RG6", "Cables", 0.85, 150, "Commscope", "Para TV y video"),
+            Product("TUBO-EMT-1/2", "Tubo EMT 1/2", "Canalización", 35.00, 80, "Camesa", "3 metros galvanizado"),
+            Product("TUBO-PVC-3/4", "Tubo PVC 3/4", "Canalización", 28.50, 70, "Durman", "3 metros schedule 40"),
+            Product("DUCTO-FLEX-1/2", "Ducto Flexible 1/2", "Canalización", 15.75, 90, "Electroduct","Metálico 2 metros"),
+            Product("CANALETA-40x20", "Canaleta 40x20mm", "Canalización", 12.00, 110, "Panduit", "PVC blanco 2m"),
+            Product("VENT-TECHO-48", "Ventilador de Techo 48", "Ventilación", 450.00, 12, "Hunter", "Madera 5 aspas"),
+            Product("VENT-BAÑO-100", "Ventilador de Baño 100CFM", "Ventilación", 185.00, 25, "Broan","Extractor silencioso"),
+            Product("VENT-PEDESTAL-16", "Ventilador Pedestal 16", "Ventilación", 220.00, 18, "Lasko", "3 velocidades"),
+            Product("VENT-TUBO-4", "Ventilador de Tubo 4", "Ventilación", 95.00, 30, "S&P", "Para ductos 100CFM"),
+            Product("CONEC-HEMBRA-15A", "Conector Hembra 15A", "Conectores", 4.50, 200, "Ideal", "Para cable #12-14"),
+            Product("TERMINAL-ANILLO-12", "Terminal Anillo #12", "Conectores", 0.25, 500, "3M", "Estañado para 12-10"),
+            Product("CINTA-AISL-NEG", "Cinta Aislante Negra", "Conectores", 12.00, 75, "Scotch", "3/4 x 20m"),
+            Product("TAPA-TOMA-BCO", "Tapa para Tomacorriente", "Conectores", 2.00, 300, "Steck","Blanco seguridad niños"),
+            Product("SENS-MOV-PIR", "Sensor de Movimiento PIR", "Automatización", 120.00, 25, "Leviton","180° interior/exterior"),
+            Product("TIMER-DIGI-7D", "Timer Digital 7 Días", "Automatización", 85.00, 20, "Intermatic","Programable 40A"),
+            Product("DIMMER-LED-600W", "Dimmer para LED 600W", "Automatización", 65.00, 35, "Lutron","Control intensidad"),
+            Product("CONTROL-MOTOR", "Control para Motor 1HP", "Automatización", 150.00, 15, "Siemens","Reversa y protección")
+        ]
