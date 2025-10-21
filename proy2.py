@@ -162,4 +162,23 @@ class Sale:
 
     def __str__(self): return f"Venta #{self._sale_id} - {self._date} - Q{self._total:.2f}"
 
+    #Estructuras lineales: pilas y colas
 
+class Stack:
+    #Implementacion de pila
+    def __init__(self):
+        self._items = []
+    def push(self, item):
+        self._items.append(item)
+    def pop(self):
+        return self._items.pop() if not self.is_empty() else None
+    def peek(self):
+        return self._items[-1] if not self.is_empty() else None
+    def is_empty(self):
+        return len(self._items) == 0
+    def size(self):
+        return len(self._items)
+    def clear(self):
+        self._items = []
+    def show_all(self):
+        return self._items.copy #Aca retornamos la copia para proteger sus datos
