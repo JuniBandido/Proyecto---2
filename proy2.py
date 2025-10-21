@@ -334,3 +334,52 @@ class InventorySystem:
         return [p for p in self._products if p.category.lower() == category.lower()]
 
     #GESTION VENTAS
+    def create_sale(self, product_codes_quantities):
+        #Crea una nueva venta
+        if not self._current_user: return False, "Debe iniciar sesión"
+        # Validar productos y stock primero
+        for code, quantity in product_codes_quantities:
+            product = self.search_product_by_code(code)
+            if not product: return False, f"Producto {code} no encontrado"
+            if product.quantity < quantity: return False, f"Stock insuficiente para {product.name}"
+        # Procesar venta
+        sale_products, total = [], 0
+        for code, quantity in product_codes_quantities:
+            product = self.search_product_by_code(code)
+            product.reduce_stock(quantity)
+            subtotal = product.price * quantity
+            sale_products.append(
+                {'code': product.code, 'name': product.name, 'quantity': quantity, 'price': product.price,
+                 'subtotal': subtotal})
+            total += subtotal
+        # Crear y registrar venta
+        sale = Sale(self._sale_counter, self._current_user.username, sale_products, total)
+        self._sales.append(sale)
+        self._sale_counter += 1
+        self._action_history.push(f"Venta registrada: #{sale.sale_id}")
+        return True, f"Venta registrada exitosamente. Total: Q{total:.2f}"
+
+    def list_sales(self):
+        return self._sales.copy()
+
+    def get_sales_by_user(self, username):
+        return [s for s in self._sales if s.username == username]
+
+    #Reportes y Estadisticas
+    def get_total_sales(self):
+        return sum(sale.total for sale in self._sales)
+
+    def get_low_stock_products(self, threshold=5):
+        return [p for p in self._products if p.quantity <= threshold]
+
+    def get_sales_statistics(self):
+        #Obtiene estadísticas generales de ventas
+        if not self._sales: return {'total_sales': 0, 'total_amount': 0, 'average_sale': 0}
+        total_amount = self.get_total_sales()
+        return {'total_sales': len(self._sales), 'total_amount': total_amount,
+                'average_sale': total_amount / len(self._sales)}
+
+    def get_action_history(self, limit=10):
+        #Obtiene el historial de acciones recientes
+        history = self._action_history.show_all()
+        return history[-limit:] if len(history) > limit else history
