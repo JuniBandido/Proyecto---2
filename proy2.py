@@ -252,3 +252,43 @@ class InventorySystem:
             Product("DIMMER-LED-600W", "Dimmer para LED 600W", "Automatización", 65.00, 35, "Lutron","Control intensidad"),
             Product("CONTROL-MOTOR", "Control para Motor 1HP", "Automatización", 150.00, 15, "Siemens","Reversa y protección")
         ]
+        for producto in productos_ejemplo: self.add_product(producto)
+
+    @property
+    def current_user(self):
+        return self._current_user  # Getter para usuario actual
+
+    #GESTION DE USUARIOS
+    def login(self, username, password):
+        #Inicia sesion de usuario
+        for user in self._users:
+            if user.username == username and user.verify_password(password):
+                if user.active:
+                    self._current_user = user
+                    self._action_history.push(f"Ingresar: {username}")
+                    return True, f"Bienvenido {user.full_name}"
+                else:
+                    return False, "Usuario inactivo"
+        return False, "Usuario o contraseña incorrectos"
+
+    def logout(self):
+        #cierre de sesion
+        if self._current_user:
+            self._action_history.push(f"Cierre de sesion: {self._current_user.username}")
+            self._current_user = None
+
+    def add_user(self, user):
+       #SOLO ADMIN AGREGA NUEVO USUARIOS
+        if not self._validate_admin_permission(): return False, "No tiene permisos"
+        if any(u.username == user.username for u in self._users): return False, "Usuario ya existe"
+        self._users.append(user)
+        self._action_history.push(f"Usuario creado: {user.username}")
+        return True, "Usuario creado exitosamente"
+
+    def list_users(self):
+        #Lista todos los usuarios y retorna copia para proteger datos
+        return self._users.copy() if self._validate_admin_permission() else []
+
+    def _validate_admin_permission(self):
+        #Valida permisos de administrador
+        return self._current_user and self._current_user.role == "administrador"
