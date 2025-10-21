@@ -332,3 +332,5 @@ class InventorySystem:
     def get_products_by_category(self, category):
         #Obtiene productos por categoría
         return [p for p in self._products if p.category.lower() == category.lower()]
+
+    #GESTION VENTAS
