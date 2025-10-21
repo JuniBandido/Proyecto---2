@@ -292,3 +292,43 @@ class InventorySystem:
     def _validate_admin_permission(self):
         #Valida permisos de administrador
         return self._current_user and self._current_user.role == "administrador"
+
+    #GESTION PRODUCTOS
+    def add_product(self, product):
+        #Agrega un producto al inventario
+        if any(p.code == product.code for p in self._products): return False, "Código ya existe"
+        self._products.append(product)
+        if self._current_user: self._action_history.push(f"Producto agregado: {product.code}")
+        return True, "Producto agregado exitosamente"
+
+    def list_products(self):
+        return self._products.copy()  # Retorna copia para protección
+
+    def update_product(self, code, **kwargs):
+        #Actualiza un producto existente
+        if not self._validate_admin_permission(): return False, "No tiene permisos"
+        product = self.search_product_by_code(code)
+        if not product: return False, "Producto no encontrado"
+        try:
+            if 'name' in kwargs: product.name = kwargs['name']
+            if 'price' in kwargs: product.price = kwargs['price']
+            if 'quantity' in kwargs: product.quantity = kwargs['quantity']
+            if 'description' in kwargs: product.description = kwargs['description']
+            self._action_history.push(f"Producto actualizado: {code}")
+            return True, "Producto actualizado exitosamente"
+        except ValueError as e:
+            return False, str(e)
+
+    def delete_product(self, code):
+        #Elimina un producto del inventario
+        if not self._validate_admin_permission(): return False, "No tiene permisos"
+        product = self.search_product_by_code(code)
+        if product:
+            self._products.remove(product)
+            self._action_history.push(f"Producto eliminado: {code}")
+            return True, "Producto eliminado exitosamente"
+        return False, "Producto no encontrado"
+
+    def get_products_by_category(self, category):
+        #Obtiene productos por categoría
+        return [p for p in self._products if p.category.lower() == category.lower()]
