@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
 
-administradores = {"123": {"nombre": "Juan", "codigo": "123"}}
+administradores = {"123": {"nombre": "Junior (José Noguera)", "codigo": "123"}}
 
 def iniciarSesionAdministradores():
     if entradaIngresaCodigoLogin.get() in administradores and entradaIngresaClaveLogin.get() == administradores[entradaIngresaCodigoLogin.get()]['codigo']:
@@ -10,15 +10,16 @@ def iniciarSesionAdministradores():
         ventanaMenu.attributes('-fullscreen', True)
         ventanaMenu.config(bg="#292421")
 
-        textopaginaLogin = tk.Label(ventanaMenu, text=f"Perfil de: {administradores[entradaIngresaCodigoLogin.get()]['nombre']}", font=("Times New Roman", 10),fg="ivory1", bg="#292421")
-        textopaginaLogin.place(relx=0, rely=0)
+        textopaginaLogin = tk.Label(ventanaMenu, text=f"Perfil de: {administradores[entradaIngresaCodigoLogin.get()]['nombre']}", font=("Times New Roman", 20),fg="ivory1", bg="#292421")
+        textopaginaLogin.pack()
 
         textopaginaLogin2 = tk.Label(ventanaMenu, text="Menu de opciones", font=("Times New Roman", 20),fg="ivory1", bg="#292421")
-        textopaginaLogin2.place(relx=0, rely=0.1)
+        textopaginaLogin2.pack(pady=20)
 
         botonCerrar(ventanaMenu)
 
         ventanaLogin.destroy()
+
     else:
         messagebox.showerror("Error", "Codigo o contraseña incorrectos")
 
@@ -29,6 +30,10 @@ def botonCerrar(ventana):
 ventanaLogin = tk.Tk()
 ventanaLogin.attributes('-fullscreen', True)
 ventanaLogin.config(bg="#292421")
+
+imagenLogo = tk.PhotoImage(file="LogoYimsaWeb-1.png")
+imagen = ttk.Label(image=imagenLogo)
+imagen.pack(side="top")
 
 textoIniciarSesionLogin = tk.Label(ventanaLogin, text="INICIAR SESION", font=("Times New Roman", 28, "bold"), bg="#292421", fg="ivory1")
 textoIniciarSesionLogin.pack(pady=50)
@@ -52,9 +57,5 @@ botonCerrar(ventanaLogin)
 
 botonlogin = tk.Button(ventanaLogin, text="Iniciar sesión", font=("Arial", 20), bg="red", command=iniciarSesionAdministradores)
 botonlogin.pack(pady=50)
-
-imagenLogo = tk.PhotoImage(file="LogoYimsaWeb-1.png")
-label = ttk.Label(image=imagenLogo)
-label.pack(side=tk.BOTTOM)
 
 ventanaLogin.mainloop()
