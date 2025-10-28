@@ -17,7 +17,7 @@ class Product: #Clase para representar un producto en el inventario
         self._quantity = quantity
         self._brand = brand
         self._description = description
- #Getters - Acceso controlado a atributos
+    #Getters - Acceso controlado a atributos
     @property
     def code(self):
         return self._code
@@ -78,7 +78,7 @@ class Product: #Clase para representar un producto en el inventario
         return False
 
     def add_stock(self, amount):
-       #Metodo para agregar stock
+        #Metodo para agregar stock
         if amount > 0: self._quantity += amount; return True
         return False
 
@@ -181,12 +181,12 @@ class Stack:
     def clear(self):
         self._items = []
     def show_all(self):
-        return self._items.copy #Aca retornamos la copia para proteger sus datos
+        return self._items.copy()  # Aca retornamos la copia para proteger sus datos
 
 class Queue:
     #Implementacion de cola
     def __init__(self):
-        self._items = deque
+        self._items = deque()
     def enqueue(self, item):
         self._items.append(item)
     def dequeue(self):
@@ -210,7 +210,7 @@ class InventorySystem:
         self._users = []
         self._sales = [] #Para los datos
         self._sale_counter = 1 #Contador para los ID de ventas
-        self._action = Stack() #Historial de acciones
+        self._action_history = Stack()  #Historial de acciones
         self._pending_tasks = Queue() #Historial de tareas pendientes
         self._current_user = None #Usuario actual
         self._initialize_default_data()
@@ -219,15 +219,14 @@ class InventorySystem:
         #Creamos usuarios
         self._users.extend([
             User("admin", "admin123", "administrador", "Administrador Principal"),
-            User("vendedor", "vend123", "dependiente", "Juan Perez")
-        ])
+            User("vendedor", "vend123", "dependiente", "Juan Perez")])
         #Creamos productos de prueba
         productos_ejemplo = [
             Product("BOMB-LED-9W", "Bombillo LED 9W", "Iluminación", 25.50, 50, "Philips", "Luz día 6500K E27"),
             Product("TUBO-LED-4P", "Tubo LED 4 Pies", "Iluminación", 45.00, 30, "Sylvania", "Blanco frío 18W T8"),
             Product("LAMP-LED-PANEL", "Panel LED 600x600", "Iluminación", 180.00, 15, "Osram", "36W para cielo falso"),
             Product("SPOT-LED-5W", "Spot LED Empotrable", "Iluminación", 32.00, 40, "Technolite", "5W 3000K GU10"),
-            Product("TOMA-DOBLE-15A", "Tomacorriente Doble 15A", "Accesorios", 18.75, 100, "Steck", "Blanco polar 250V"),
+            Product("TOMA-DOBLE-15A", "Tomacorriente Doble 15A", "Accesorios", 18.75, 100, "Steck","Blanco polar 250V"),
             Product("APAG-SIMPLE-15A", "Apagador Simple 15A", "Accesorios", 12.50, 80, "Legrand", "Blanco mate"),
             Product("BREAKER-20A", "Breaker 20A 1P", "Accesorios", 45.00, 60, "Square D", "Para tablero principal"),
             Product("CAJA-RECT-4x2", "Caja Rectangular 4x2", "Accesorios", 8.00, 120, "Conductores", "Para apagadores"),
@@ -278,7 +277,7 @@ class InventorySystem:
             self._current_user = None
 
     def add_user(self, user):
-       #SOLO ADMIN AGREGA NUEVO USUARIOS
+        #SOLO ADMIN AGREGA NUEVO USUARIOS
         if not self._validate_admin_permission(): return False, "No tiene permisos"
         if any(u.username == user.username for u in self._users): return False, "Usuario ya existe"
         self._users.append(user)
@@ -300,6 +299,28 @@ class InventorySystem:
         self._products.append(product)
         if self._current_user: self._action_history.push(f"Producto agregado: {product.code}")
         return True, "Producto agregado exitosamente"
+
+    def search_product_by_code(self, code):
+        #Busqueda secuencial por codigo
+        for product in self._products:
+            if product.code == code:
+                return product
+        return None
+
+    def search_products_sequential(self, key, value):
+        #Busqueda secuencial flexible
+        results = []
+        for product in self._products:
+            try:
+                item_value = getattr(product, key)
+                if isinstance(item_value, str) and isinstance(value, str):
+                    if value.lower() in item_value.lower():
+                        results.append(product)
+                elif item_value == value:
+                    results.append(product)
+            except AttributeError:
+                continue
+        return results
 
     def list_products(self):
         return self._products.copy()  # Retorna copia para protección
@@ -333,16 +354,124 @@ class InventorySystem:
         #Obtiene productos por categoría
         return [p for p in self._products if p.category.lower() == category.lower()]
 
+    #ALGORITMOS DE ORDENAMIENTO (QUICKSORT)
+    def quick_sort_products(self, products=None, key='name'):
+        #QuickSort recursivo para ordenar productos
+        if products is None:
+            products = self._products.copy()
+
+        if len(products) <= 1:
+            return products
+
+        #Elegir pivote
+        pivot = products[len(products) // 2]
+        pivot_value = getattr(pivot, key)
+
+        # Particion
+        left = []
+        middle = []
+        right = []
+
+        for product in products:
+            current_value = getattr(product, key)
+            if current_value < pivot_value:
+                left.append(product)
+            elif current_value == pivot_value:
+                middle.append(product)
+            else:
+                right.append(product)
+
+        #Recursividad
+        return self.quick_sort_products(left, key) + middle + self.quick_sort_products(right, key)
+
+    def get_products_sorted_by_name(self):
+        # Obtiene productos ordenados por nombre usando QuickSort
+        return self.quick_sort_products(key='name')
+
+    def get_products_sorted_by_stock(self):
+        # Obtiene productos ordenados por stock usando QuickSort
+        return self.quick_sort_products(key='quantity')
+
+    def get_products_sorted_by_price(self):
+        # Obtiene productos ordenados por precio usando QuickSort
+        return self.quick_sort_products(key='price')
+
+    def get_products_sorted_by_category(self):
+        # Obtiene productos ordenados por categoria usando QuickSort
+        return self.quick_sort_products(key='category')
+
+    #METODOS DE BUSQUEDA BINARIA
+    def binary_search_products(self, key, value):
+        #Busqueda binaria para productos ordenados
+        sorted_products = self.quick_sort_products(key=key)
+
+        low, high = 0, len(sorted_products) - 1
+        results = []
+
+        while low <= high:
+            mid = (low + high) // 2
+            current_product = sorted_products[mid]
+            current_value = getattr(current_product, key)
+
+            if current_value == value:
+                #Encontramos coincidencia, buscar adyacentes
+                results.append(current_product)
+
+                #Buscar hacia izquierda
+                left = mid - 1
+                while left >= 0 and getattr(sorted_products[left], key) == value:
+                    results.append(sorted_products[left])
+                    left -= 1
+
+                #Buscar hacia derecha
+                right = mid + 1
+                while right < len(sorted_products) and getattr(sorted_products[right], key) == value:
+                    results.append(sorted_products[right])
+                    right += 1
+
+                return results
+            elif current_value < value:
+                low = mid + 1
+            else:
+                high = mid - 1
+
+        return results
+
+    def binary_search_by_name(self, name):
+        #Busqueda binaria por nombre
+        return self.binary_search_products('name', name)
+
+    def binary_search_by_category(self, category):
+        #Busqueda binaria por categoria
+        return self.binary_search_products('category', category)
+
+    def binary_search_by_price(self, price):
+        #Busqueda binaria por precio exacto
+        return self.binary_search_products('price', float(price))
+
+    #METODOS DE BUSQUEDA SECUENCIAL
+    def search_products_by_name(self, name):
+        #Busqueda secuencial por nombre
+        return self.search_products_sequential('name', name)
+
+    def search_products_by_category(self, category):
+        #Busqueda secuencial por categoria
+        return self.search_products_sequential('category', category)
+
+    def search_products_by_brand(self, brand):
+        #Busqueda secuencial por marca
+        return self.search_products_sequential('brand', brand)
+
     #GESTION VENTAS
     def create_sale(self, product_codes_quantities):
         #Crea una nueva venta
         if not self._current_user: return False, "Debe iniciar sesión"
-        # Validar productos y stock primero
+        #Validar productos y stock primero
         for code, quantity in product_codes_quantities:
             product = self.search_product_by_code(code)
             if not product: return False, f"Producto {code} no encontrado"
             if product.quantity < quantity: return False, f"Stock insuficiente para {product.name}"
-        # Procesar venta
+        #Procesar venta
         sale_products, total = [], 0
         for code, quantity in product_codes_quantities:
             product = self.search_product_by_code(code)
@@ -352,7 +481,7 @@ class InventorySystem:
                 {'code': product.code, 'name': product.name, 'quantity': quantity, 'price': product.price,
                  'subtotal': subtotal})
             total += subtotal
-        # Crear y registrar venta
+        #Crear y registrar venta
         sale = Sale(self._sale_counter, self._current_user.username, sale_products, total)
         self._sales.append(sale)
         self._sale_counter += 1
