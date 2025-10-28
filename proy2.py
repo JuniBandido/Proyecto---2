@@ -512,3 +512,322 @@ class InventorySystem:
         #Obtiene el historial de acciones recientes
         history = self._action_history.show_all()
         return history[-limit:] if len(history) > limit else history
+
+# FUNCIONES DE MENÚ E INTERFAZ
+def show_menu(title, options, user=None):
+    print(f"          {title}{f' - {user.full_name}' if user else ''}")
+    for i, option in enumerate(options, 1):
+        print(f"{i}. {option}")
+def main_menu():
+    show_menu("SISTEMA DE GESTIÓN - TIENDA DE MATERIAL ELECTRICO", ["Iniciar Sesión", "Salir"])
+
+def admin_menu(user):
+    show_menu("MENÚ ADMINISTRADOR",
+              ["Gestionar Usuarios", "Registrar Producto", "Consultar Inventario",
+               "Editar Producto", "Eliminar Producto", "Ordenar Productos ",
+               "Búsqueda Avanzada", "Generar Reportes", "Ver Estadísticas",
+               "Ver Historial", "Cerrar Sesión"], user)
+
+def employee_menu(user):
+    show_menu("MENÚ EMPLEADO",
+              ["Consultar Inventario", "Buscar Producto", "Ordenar Productos",
+               "Búsqueda Avanzada", "Registrar Venta", "Ver Historial Ventas",
+               "Cerrar Sesión"], user)
+
+def manage_users(system):
+    while True:
+        show_menu("GESTIÓN DE USUARIOS", ["Listar Usuarios", "Crear Nuevo Usuario", "Volver"])
+        option = input("\nSeleccione una opción: ")
+        if option == "1":
+            users = system.list_users()
+            print("\n--- LISTA DE USUARIOS ---")
+            if users:
+                for i, user in enumerate(users, 1):
+                    status = "Activo" if user.active else "Inactivo"
+                    print(f"{i}. {user.username} - {user.full_name} - {user.role} - {status}")
+            else:
+                print("No hay usuarios para mostrar")
+        elif option == "2":
+            print("\n--- CREAR NUEVO USUARIO ---")
+            username, password, full_name = input("Usuario: "), input("Contraseña: "), input("Nombre completo: ")
+            role = "administrador" if input("Rol (1=Admin, 2=Empleado): ") == "1" else "empleado"
+            success, msg = system.add_user(User(username, password, role, full_name))
+            print(f"\n{msg}")
+        elif option == "3":
+            break
+        else:
+            print("\nOpción no válida")
+
+def register_product(system):
+    print("\n--- REGISTRAR PRODUCTO ---")
+    try:
+        product = Product(
+            input("Código: ").upper(), input("Nombre: "), input("Categoría: "),
+            float(input("Precio: ")), int(input("Cantidad: ")), input("Marca: "), input("Descripción: ")
+        )
+        success, msg = system.add_product(product)
+        print(f"\n{msg}")
+    except ValueError:
+        print("\nError: Precio o cantidad inválidos")
+
+def view_inventory(system):
+    print("\n--- INVENTARIO ---")
+    products = system.list_products()
+    if products:
+        for i, p in enumerate(products, 1):
+            print(
+                f"\n{i}. Código: {p.code}\n   Nombre: {p.name}\n   Marca: {p.brand}\n   Categoría: {p.category}\n   Precio: Q{p.price:.2f}\n   Stock: {p.quantity}")
+            if p.description: print(f"   Descripción: {p.description}")
+    else:
+        print("No hay productos")
+
+def edit_product(system):
+    print("\n--- EDITAR PRODUCTO ---")
+    product = system.search_product_by_code(input("Código: ").upper())
+    if not product: print("Producto no encontrado"); return
+    print(f"Editando: {product}")
+    updates = {}
+    if name := input(f"Nombre [{product.name}]: "): updates['name'] = name
+    if price := input(f"Precio [{product.price}]: "): updates['price'] = float(price)
+    if quantity := input(f"Cantidad [{product.quantity}]: "): updates['quantity'] = int(quantity)
+    if description := input(f"Descripción [{product.description}]: "): updates['description'] = description
+    if updates:
+        success, msg = system.update_product(product.code, **updates)
+        print(msg)
+    else:
+        print("No se realizaron cambios")
+
+def delete_product(system):
+    print("\n--- ELIMINAR PRODUCTO ---")
+    product = system.search_product_by_code(input("Código: ").upper())
+    if not product: print("Producto no encontrado"); return
+    print(f"Producto: {product}")
+    if input("¿Confirmar eliminación? (s/n): ").lower() == 's':
+        success, msg = system.delete_product(product.code)
+        print(msg)
+    else:
+        print("Operación cancelada")
+
+def search_product(system):
+    print("\n--- BUSCAR PRODUCTO ---")
+    option = input("Buscar por: 1=Código, 2=Nombre, 3=Categoría: ")
+    if option == "1":
+        product = system.search_product_by_code(input("Código: ").upper())
+        if product: print(f"Encontrado: {product}"); return
+    elif option == "2":
+        results = system.search_products_by_name(input("Nombre: "))
+    elif option == "3":
+        results = system.get_products_by_category(input("Categoría: "))
+    else:
+        print("Opción inválida")
+        return
+    if results:
+        print(f"Se encontraron {len(results)} productos:")
+        for p in results: print(f" - {p}")
+    else:
+        print("No se encontraron productos")
+
+
+def sort_products_menu(system):
+    print("\n--- ORDENAR PRODUCTOS ---")
+    print("1. Ordenar por Nombre")
+    print("2. Ordenar por Stock")
+    print("3. Ordenar por Precio")
+    print("4. Ordenar por Categoría")
+    print("5. Volver")
+
+    option = input("Seleccione opción: ")
+
+    if option == "1":
+        products = system.get_products_sorted_by_name()
+        print("\n PRODUCTOS ORDENADOS POR NOMBRE:")
+    elif option == "2":
+        products = system.get_products_sorted_by_stock()
+        print("\n PRODUCTOS ORDENADOS POR STOCK:")
+    elif option == "3":
+        products = system.get_products_sorted_by_price()
+        print("\n PRODUCTOS ORDENADOS POR PRECIO:")
+    elif option == "4":
+        products = system.get_products_sorted_by_category()
+        print("\n PRODUCTOS ORDENADOS POR CATEGORÍA:")
+    elif option == "5":
+        return
+    else:
+        print("Opción inválida")
+        return
+
+    for i, product in enumerate(products, 1):
+        print(f"{i}. {product}")
+
+
+def advanced_search_menu(system):
+    print("\n--- BÚSQUEDA AVANZADA ---")
+    print("1. Buscar por Nombre")
+    print("2. Buscar por Categoría")
+    print("3. Buscar por Precio Exacto")
+    print("4. Buscar por Nombre")
+    print("5. Buscar por Categoría")
+    print("6. Volver")
+
+    option = input("Seleccione opción: ")
+
+    if option == "1":
+        name = input("Nombre exacto a buscar: ")
+        results = system.binary_search_by_name(name)
+        method = "BÚSQUEDA BINARIA"
+    elif option == "2":
+        category = input("Categoría exacta a buscar: ")
+        results = system.binary_search_by_category(category)
+        method = "BÚSQUEDA BINARIA"
+    elif option == "3":
+        try:
+            price = float(input("Precio exacto a buscar: "))
+            results = system.binary_search_by_price(price)
+            method = "BÚSQUEDA BINARIA"
+        except ValueError:
+            print("Precio inválido")
+            return
+    elif option == "4":
+        name = input("Nombre a buscar: ")
+        results = system.search_products_by_name(name)
+        method = "BÚSQUEDA SECUENCIAL"
+    elif option == "5":
+        category = input("Categoría a buscar: ")
+        results = system.search_products_by_category(category)
+        method = "BÚSQUEDA SECUENCIAL"
+    elif option == "6":
+        return
+    else:
+        print("Opción inválida")
+        return
+
+    if results:
+        print(f"\n Se encontraron {len(results)} productos ({method}):")
+        for product in results:
+            print(f"   - {product}")
+    else:
+        print(f"\n No se encontraron productos ({method})")
+
+
+def register_sale(system):
+    print("\n--- REGISTRAR VENTA ---")
+    products_to_sell = []
+    while True:
+        code = input("Código producto (o 'fin'): ").upper()
+        if code == 'FIN': break
+        product = system.search_product_by_code(code)
+        if not product: print("Producto no encontrado"); continue
+        print(f"Producto: {product.name} - Stock: {product.quantity}")
+        try:
+            quantity = int(input("Cantidad: "))
+            if quantity <= 0: print("Cantidad debe ser > 0"); continue
+            if quantity > product.quantity: print(f"Stock insuficiente. Disponible: {product.quantity}"); continue
+            products_to_sell.append((code, quantity))
+            print("Producto agregado")
+        except ValueError:
+            print("Cantidad inválida")
+    if not products_to_sell: print("Venta cancelada - sin productos"); return
+    # Resumen de venta
+    print("\n--- RESUMEN VENTA ---")
+    total = 0
+    for code, quantity in products_to_sell:
+        product = system.search_product_by_code(code)
+        subtotal = product.price * quantity
+        total += subtotal
+        print(f"{product.name} x{quantity} = Q{subtotal:.2f}")
+    print(f"TOTAL: Q{total:.2f}")
+    if input("¿Confirmar venta? (s/n): ").lower() == 's':
+        success, msg = system.create_sale(products_to_sell)
+        print(msg)
+    else:
+        print("Venta cancelada")
+
+
+def reports_statistics(system):
+    print("\n--- REPORTES Y ESTADÍSTICAS ---")
+    stats = system.get_sales_statistics()
+    print(
+        f"Ventas: Total={stats['total_sales']}, Monto=Q{stats['total_amount']:.2f}, Promedio=Q{stats['average_sale']:.2f}")
+    print("\n--- PRODUCTOS STOCK BAJO ---")
+    low_stock = system.get_low_stock_products(10)
+    if low_stock:
+        for p in low_stock: print(f"! {p.name} - Stock: {p.quantity}")
+    else:
+        print("Todo el stock está bien")
+    print("\n--- HISTORIAL ACCIONES ---")
+    history = system.get_action_history(10)
+    if history:
+        for i, action in enumerate(reversed(history), 1): print(f"{i}. {action}")
+    else:
+        print("No hay acciones")
+
+
+def sales_history(system):
+    print("\n--- HISTORIAL VENTAS ---")
+    sales = system.list_sales()
+    if sales:
+        for sale in sales:
+            print(f"\n{sale}\nVendedor: {sale.username}\nProductos:")
+            for item in sale.products: print(f" - {item['name']} x{item['quantity']} = Q{item['subtotal']:.2f}")
+    else:
+        print("No hay ventas")
+
+
+# ============================================================================
+# PROGRAMA PRINCIPAL
+# ============================================================================
+
+def run_system():
+    system = InventorySystem()
+    print("\n" + "=" * 60)
+    print("     SISTEMA DE GESTIÓN - TIENDA ELECTRÓNICOS")
+    print("=" * 60)
+    print("Usuarios prueba: admin/admin123 o vendedor/vend123")
+
+    while True:
+        if not system.current_user:
+            main_menu()
+            option = input("\nSeleccione opción: ")
+            if option == "1":
+                user, pwd = input("Usuario: "), input("Contraseña: ")
+                success, msg = system.login(user, pwd)
+                print(f"\n{msg}")
+            elif option == "2":
+                print("\n¡Hasta pronto!")
+                break
+            else:
+                print("\nOpción no válida")
+        else:
+            if system.current_user.role == "administrador":
+                admin_menu(system.current_user)
+                option = input("\nSeleccione opción: ")
+                ops = [manage_users, register_product, view_inventory, edit_product,
+                       delete_product, sort_products_menu, advanced_search_menu,
+                       reports_statistics, reports_statistics, reports_statistics,
+                       lambda s: s.logout()]
+                if 1 <= int(option) <= len(ops):
+                    if option == "11":
+                        system.logout()
+                        print("Sesión cerrada")
+                    else:
+                        ops[int(option) - 1](system)
+                else:
+                    print("Opción no válida")
+            else:
+                employee_menu(system.current_user)
+                option = input("\nSeleccione opción: ")
+                ops = [view_inventory, search_product, sort_products_menu,
+                       advanced_search_menu, register_sale, sales_history,
+                       lambda s: s.logout()]
+                if 1 <= int(option) <= len(ops):
+                    if option == "7":
+                        system.logout()
+                        print("Sesión cerrada")
+                    else:
+                        ops[int(option) - 1](system)
+                else:
+                    print("Opción no válida")
+
+
+# Iniciar el sistema
+run_system()
