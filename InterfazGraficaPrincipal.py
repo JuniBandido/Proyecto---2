@@ -27,7 +27,7 @@ def iniciarSesionAdministradores():
         textopaginaLogin2 = tk.Label(ventanaMenu, text="Menu de opciones", font=("Times New Roman", 20),fg="ivory1", bg="#292421")
         textopaginaLogin2.grid(row=2, column=0, pady= 80)
 
-        botonVerInventario = tk.Button(ventanaMenu, text=f"Ver Inventario", font=("Arial", 20), bg="red", command=lambda: [verInventario(), ventanaMenu.destroy()])
+        botonVerInventario = tk.Button(ventanaMenu, text=f"Ver Inventario", font=("Arial", 20), bg="green", fg="white", command=lambda: [verInventario(), ventanaMenu.destroy()])
         botonVerInventario.grid(row=3, column=0)
 
         botonCerrar(ventanaMenu)
@@ -75,7 +75,7 @@ entradaIngresaClaveLogin.grid(row=7,column=0)
 
 botonCerrar(ventanaLogin)
 
-botonlogin = tk.Button(ventanaLogin, text="Iniciar sesión", font=("Arial", 20), bg="red", command=iniciarSesionAdministradores)
+botonlogin = tk.Button(ventanaLogin, text="Iniciar sesión", font=("Arial", 20), bg="green", fg="white" , command=iniciarSesionAdministradores)
 botonlogin.grid(row=8, column=0, pady=60)
 
 ventanaLogin.mainloop()
