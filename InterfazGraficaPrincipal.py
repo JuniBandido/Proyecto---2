@@ -35,6 +35,12 @@ imagenLogo = tk.PhotoImage(file="LogoYimsaWeb-1.png")
 imagen = ttk.Label(image=imagenLogo)
 imagen.grid(row=0, column=0)
 
+imagenDecorativa1 = tk.PhotoImage(file="KTM-Logo.svg.png")
+imagenDecorativa1 = imagenDecorativa1.subsample(3, 3)
+
+imagen = ttk.Label(image=imagenDecorativa1)
+imagen.place(x=700, y=300)
+
 textoIniciarSesionLogin = tk.Label(ventanaLogin, text="INICIAR SESION", font=("Times New Roman", 28, "bold"), bg="#292421", fg="ivory1")
 textoIniciarSesionLogin.grid(row=1, column=0, pady=90)
 
