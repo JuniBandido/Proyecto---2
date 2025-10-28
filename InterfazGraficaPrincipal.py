@@ -47,16 +47,15 @@ ventanaLogin.config(bg="#292421")
 
 imagenLogo = tk.PhotoImage(file="LogoYimsaWeb-1.png")
 imagen = ttk.Label(image=imagenLogo)
-imagen.grid(row=0, column=0)
+imagen.grid(row=0, column=0, pady=50)
 
 imagenDecorativa1 = tk.PhotoImage(file="KTM-Logo.svg.png")
 imagenDecorativa1 = imagenDecorativa1.subsample(3, 3)
-
 imagen = ttk.Label(image=imagenDecorativa1)
-imagen.place(x=700, y=300)
+imagen.place(x=500, y=300)
 
 textoIniciarSesionLogin = tk.Label(ventanaLogin, text="INICIAR SESION", font=("Times New Roman", 28, "bold"), bg="#292421", fg="ivory1")
-textoIniciarSesionLogin.grid(row=1, column=0, pady=90)
+textoIniciarSesionLogin.grid(row=1, column=0, pady=40)
 
 textoIngresaCodigoLogin = tk.Label(ventanaLogin, text="Ingresa tu código", font=("Arial", 20), bg="#292421", fg="ivory1")
 textoIngresaCodigoLogin.grid(row=2, column=0)
@@ -65,7 +64,7 @@ entradaIngresaCodigoLogin = tk.Entry(ventanaLogin, width=35, font=("Arial", 15))
 entradaIngresaCodigoLogin.grid(row=4, column=0)
 
 espacioEnBlanco = tk.Label(ventanaLogin, text="", bg="#292421")
-espacioEnBlanco.grid(row=5, column=0, pady=45)
+espacioEnBlanco.grid(row=5, column=0, pady=30)
 
 textoIngresaClaveLogin = tk.Label(ventanaLogin, text="Ingresa tu contraseña", font=("Arial", 20), bg="#292421", fg="ivory1")
 textoIngresaClaveLogin.grid(row=6, column=0)
