@@ -773,15 +773,11 @@ def sales_history(system):
         print("No hay ventas")
 
 
-# ============================================================================
 # PROGRAMA PRINCIPAL
-# ============================================================================
 
 def run_system():
     system = InventorySystem()
-    print("\n" + "=" * 60)
     print("     SISTEMA DE GESTIÓN - TIENDA ELECTRÓNICOS")
-    print("=" * 60)
     print("Usuarios prueba: admin/admin123 o vendedor/vend123")
 
     while True:
