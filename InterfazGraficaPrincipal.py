@@ -4,17 +4,31 @@ from tkinter import ttk
 
 administradores = {"123": {"nombre": "Junior (José Noguera)", "codigo": "123"}}
 
+def verInventario():
+    ventanaInventario = tk.Tk()
+    ventanaInventario.attributes('-fullscreen' ,True)
+    ventanaInventario.config(bg="#292421")
+
+    textoPrueba = tk.Label(ventanaInventario, text=f"Para ver si da", font=("Times New Roman", 20), fg="ivory1", bg="#292421")
+    textoPrueba.grid(row=0, column=0)
+
+    botonCerrar(ventanaInventario)
+
+
 def iniciarSesionAdministradores():
     if entradaIngresaCodigoLogin.get() in administradores and entradaIngresaClaveLogin.get() == administradores[entradaIngresaCodigoLogin.get()]['codigo']:
         ventanaMenu = tk.Tk()
         ventanaMenu.attributes('-fullscreen', True)
         ventanaMenu.config(bg="#292421")
 
-        textopaginaLogin = tk.Label(ventanaMenu, text=f"Perfil de: {administradores[entradaIngresaCodigoLogin.get()]['nombre']}", font=("Times New Roman", 20),fg="ivory1", bg="#292421")
+        textopaginaLogin = tk.Label(ventanaMenu, text=f"Perfil de: {administradores[entradaIngresaCodigoLogin.get()]['nombre']}", font=("Times New Roman", 20), fg="ivory1", bg="#292421")
         textopaginaLogin.grid(row=0, column=0)
 
         textopaginaLogin2 = tk.Label(ventanaMenu, text="Menu de opciones", font=("Times New Roman", 20),fg="ivory1", bg="#292421")
         textopaginaLogin2.grid(row=2, column=0, pady= 80)
+
+        botonVerInventario = tk.Button(ventanaMenu, text=f"Ver Inventario", font=("Arial", 20), bg="red", command=lambda: [verInventario(), ventanaMenu.destroy()])
+        botonVerInventario.grid(row=3, column=0)
 
         botonCerrar(ventanaMenu)
 
