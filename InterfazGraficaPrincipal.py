@@ -30,30 +30,38 @@ class VentanaLogin(tk.Tk):
         usuario = self.entry_usuario.get()
         contraseña = self.entry_contraseña.get()
 
-        # Crear conexión local dentro del metodo
         conexion = sqlite3.connect("usuarios.db")
         cursor = conexion.cursor()
 
+        # Buscar en administradores
         cursor.execute("SELECT * FROM administradores WHERE codigo = ? AND contrasenia = ?", (usuario, contraseña))
-        resultado = cursor.fetchone()
+        resultado_admin = cursor.fetchone()
+
+        # Buscar en empleados
+        cursor.execute("SELECT * FROM empleados WHERE codigo = ? AND contrasenia = ?", (usuario, contraseña))
+        resultado_empleado = cursor.fetchone()
 
         conexion.close()
 
-        if resultado:
-            self.withdraw()  # Oculta la ventana de login
-            VentanaPrincipal(self, usuario)  # Pasa referencia
+        if resultado_admin:
+            self.withdraw()
+            VentanaPrincipalAdministradores(self, usuario)
+        elif resultado_empleado:
+            self.withdraw()
+            VentanaPrincipalEmpleados(self, usuario)
         else:
             messagebox.showerror("Error", "Código o Contraseña incorrectos")
 
-class VentanaPrincipal(tk.Toplevel):
+class VentanaPrincipalEmpleados(tk.Toplevel):
     def __init__(self, ventana_login, usuario):
         super().__init__()
-        self.title("Panel Principal")
+        self.title("Panel Principal Empleado")
         self.state("zoomed")
         self.ventana_login = ventana_login  # Guarda referencia
 
-        tk.Label(self, text=f"Bienvenido, {usuario}", font=("Arial", 24)).place(x=100, y=100)
-        ttk.Button(self, text="Cerrar sesión", command=self.cerrar_sesion).place(x=100, y=1000)
+        tk.Label(self,text="Ventana de empleados").place(x=100, y=100)
+
+        ttk.Button(self, text="Cerrar sesión", command=self.cerrar_sesion).place(x=100, y=900)
 
     def cerrar_sesion(self):
         self.destroy()
@@ -61,6 +69,45 @@ class VentanaPrincipal(tk.Toplevel):
         self.ventana_login.state("zoomed")
         self.ventana_login.entry_usuario.delete(0, tk.END)
         self.ventana_login.entry_contraseña.delete(0, tk.END)
+
+class VentanaPrincipalAdministradores(tk.Toplevel):
+    def __init__(self, ventana_login, usuario):
+        super().__init__()
+        self.title("Panel Principal Administradores")
+        self.state("zoomed")
+        self.ventana_login = ventana_login  # Guarda referencia
+
+        tk.Label(self, text=f"Bienvenido, {usuario}", font=("Arial", 24)).place(x=100, y=100)
+        ttk.Button(self, text="Cerrar sesión", command=self.cerrar_sesion).place(x=100, y=900)
+
+        ttk.Button(self, text="Ingresar usuarios", width=20, command=self.ingresar_nuevo).place(x=800, y=100)
+
+    def ingresar_nuevo(self):
+        IngresarUsuarioNuevo(self.ventana_login)
+
+    def cerrar_sesion(self):
+        self.destroy()
+        self.ventana_login.deiconify()
+        self.ventana_login.state("zoomed")
+        self.ventana_login.entry_usuario.delete(0, tk.END)
+        self.ventana_login.entry_contraseña.delete(0, tk.END)
+
+class IngresarUsuarioNuevo(tk.Toplevel):
+    def __init__(self, ventana_login):
+        super().__init__()
+        self.title("Agregar nuevos miembros a la empresa")
+        self.state("zoomed")
+        self.ventana_login = ventana_login
+
+        tk.Label(self, text="Ingresa el nombre del nuevo usuario").place(x=100, y=100)
+        condigoNuevo = tk.Entry(self)
+        condigoNuevo.place(x=100, y=130)
+
+        tk.Label(self, text="Ingresa la contraseña del nuevo usuario").place(X=100, Y=200)
+        contraseñaNUevo = tk.Entry(self)
+        contraseñaNUevo.place(x=100, y=230)
+
+        ttk.Button(self, text="Volver", command=self.destroy).place(x=100, y=200)
 
 
 if __name__ == "__main__":
