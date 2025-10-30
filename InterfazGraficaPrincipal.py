@@ -1,80 +1,68 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
+import sqlite3
 
-administradores = {"123": {"nombre": "Junior (José Noguera)", "codigo": "123"}}
+class VentanaLogin(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Inicio de sesión")
+        self.config(bg="gray10")
+        self.state("zoomed")
 
-def verInventario():
-    ventanaInventario = tk.Tk()
-    ventanaInventario.attributes('-fullscreen' ,True)
-    ventanaInventario.config(bg="#292421")
+        self.imagen = tk.PhotoImage(file="LogoYimsaWeb-1.png")
+        imagenEtiqueta = tk.Label(self, image=self.imagen)
+        imagenEtiqueta.pack()
 
-    textoPrueba = tk.Label(ventanaInventario, text=f"Para ver si da", font=("Times New Roman", 20), fg="ivory1", bg="#292421")
-    textoPrueba.grid(row=0, column=0)
+        tk.Frame(self, bg="white", width=300, height=600).place(x=90, y=90)
 
-    botonCerrar(ventanaInventario)
+        tk.Label(self, text="Código de Usuario:", font=("Times New Roman", 20), bg="white").place(x=100, y=100)
+        self.entry_usuario = ttk.Entry(self)
+        self.entry_usuario.place(x=100, y=140)
+
+        tk.Label(self, text="Contraseña:", font=("Times New Roman", 20), bg="white").place(x=100, y=180)
+        self.entry_contraseña = ttk.Entry(self, show="*")
+        self.entry_contraseña.place(x=100, y=220)
+
+        ttk.Button(self, text="Iniciar sesión", command=self.verificar_login).place(x=100, y=280)
+
+    def verificar_login(self):
+        usuario = self.entry_usuario.get()
+        contraseña = self.entry_contraseña.get()
+
+        # Crear conexión local dentro del metodo
+        conexion = sqlite3.connect("usuarios.db")
+        cursor = conexion.cursor()
+
+        cursor.execute("SELECT * FROM administradores WHERE codigo = ? AND contrasenia = ?", (usuario, contraseña))
+        resultado = cursor.fetchone()
+
+        conexion.close()
+
+        if resultado:
+            self.withdraw()  # Oculta la ventana de login
+            VentanaPrincipal(self, usuario)  # Pasa referencia
+        else:
+            messagebox.showerror("Error", "Código o Contraseña incorrectos")
+
+class VentanaPrincipal(tk.Toplevel):
+    def __init__(self, ventana_login, usuario):
+        super().__init__()
+        self.title("Panel Principal")
+        self.state("zoomed")
+        self.ventana_login = ventana_login  # Guarda referencia
+
+        tk.Label(self, text=f"Bienvenido, {usuario}", font=("Arial", 24)).place(x=100, y=100)
+        ttk.Button(self, text="Cerrar sesión", command=self.cerrar_sesion).place(x=100, y=1000)
+
+    def cerrar_sesion(self):
+        self.destroy()
+        self.ventana_login.deiconify()
+        self.ventana_login.state("zoomed")
+        self.ventana_login.entry_usuario.delete(0, tk.END)
+        self.ventana_login.entry_contraseña.delete(0, tk.END)
 
 
-def iniciarSesionAdministradores():
-    if entradaIngresaCodigoLogin.get() in administradores and entradaIngresaClaveLogin.get() == administradores[entradaIngresaCodigoLogin.get()]['codigo']:
-        ventanaMenu = tk.Tk()
-        ventanaMenu.attributes('-fullscreen', True)
-        ventanaMenu.config(bg="#292421")
-
-        textopaginaLogin = tk.Label(ventanaMenu, text=f"Perfil de: {administradores[entradaIngresaCodigoLogin.get()]['nombre']}", font=("Times New Roman", 20), fg="ivory1", bg="#292421")
-        textopaginaLogin.grid(row=0, column=0)
-
-        textopaginaLogin2 = tk.Label(ventanaMenu, text="Menu de opciones", font=("Times New Roman", 20),fg="ivory1", bg="#292421")
-        textopaginaLogin2.grid(row=2, column=0, pady= 80)
-
-        botonVerInventario = tk.Button(ventanaMenu, text=f"Ver Inventario", font=("Arial", 20), bg="green", fg="white", command=lambda: [verInventario(), ventanaMenu.destroy()])
-        botonVerInventario.grid(row=3, column=0)
-
-        botonCerrar(ventanaMenu)
-
-        ventanaLogin.destroy()
-
-    else:
-        messagebox.showerror("Error", "Codigo o contraseña incorrectos")
-
-def botonCerrar(ventana):
-    boton_cerrar = tk.Button(ventana, text="X", command=ventana.destroy, bg="red", fg="white", width=5, height=2)
-    boton_cerrar.place(relx=1.0, x=-50, y=10, anchor="ne")
-
-ventanaLogin = tk.Tk()
-ventanaLogin.attributes('-fullscreen', True)
-ventanaLogin.config(bg="#292421")
-
-imagenLogo = tk.PhotoImage(file="LogoYimsaWeb-1.png")
-imagen = ttk.Label(image=imagenLogo)
-imagen.grid(row=0, column=0, pady=50)
-
-imagenDecorativa1 = tk.PhotoImage(file="KTM-Logo.svg.png")
-imagenDecorativa1 = imagenDecorativa1.subsample(3, 3)
-imagen = ttk.Label(image=imagenDecorativa1)
-imagen.place(x=500, y=300)
-
-textoIniciarSesionLogin = tk.Label(ventanaLogin, text="INICIAR SESION", font=("Times New Roman", 28, "bold"), bg="#292421", fg="ivory1")
-textoIniciarSesionLogin.grid(row=1, column=0, pady=40)
-
-textoIngresaCodigoLogin = tk.Label(ventanaLogin, text="Ingresa tu código", font=("Arial", 20), bg="#292421", fg="ivory1")
-textoIngresaCodigoLogin.grid(row=2, column=0)
-
-entradaIngresaCodigoLogin = tk.Entry(ventanaLogin, width=35, font=("Arial", 15))
-entradaIngresaCodigoLogin.grid(row=4, column=0)
-
-espacioEnBlanco = tk.Label(ventanaLogin, text="", bg="#292421")
-espacioEnBlanco.grid(row=5, column=0, pady=30)
-
-textoIngresaClaveLogin = tk.Label(ventanaLogin, text="Ingresa tu contraseña", font=("Arial", 20), bg="#292421", fg="ivory1")
-textoIngresaClaveLogin.grid(row=6, column=0)
-
-entradaIngresaClaveLogin = tk.Entry(ventanaLogin, width=35, show="*", font=("Arial", 15))
-entradaIngresaClaveLogin.grid(row=7,column=0)
-
-botonCerrar(ventanaLogin)
-
-botonlogin = tk.Button(ventanaLogin, text="Iniciar sesión", font=("Arial", 20), bg="green", fg="white" , command=iniciarSesionAdministradores)
-botonlogin.grid(row=8, column=0, pady=60)
-
-ventanaLogin.mainloop()
+if __name__ == "__main__":
+    app = VentanaLogin()
+    app.mainloop()
