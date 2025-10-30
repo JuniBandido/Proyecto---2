@@ -295,7 +295,7 @@ class InventorySystem:
         return self._users.copy() if self._validate_admin_permission() else []
 
     def delete_user(self, username):
-        #Elimina un usuario del sistema
+        # Elimina un usuario del sistema
         if not self._validate_admin_permission(): return False, "No tiene permisos"
         if username == self._current_user.username: return False, "No puede eliminarse a sí mismo"
         for user in self._users:
@@ -564,7 +564,7 @@ def employee_menu(user):
 
 def manage_users(system):
     while True:
-        show_menu("GESTIÓN DE USUARIOS", ["Listar Usuarios", "Crear Nuevo Usuario", "Volver"])
+        show_menu("GESTIÓN DE USUARIOS", ["Listar Usuarios", "Crear Nuevo Usuario", "Eliminar Usuario", "Volver"])
         option = input("\nSeleccione una opción: ")
         if option == "1":
             users = system.list_users()
