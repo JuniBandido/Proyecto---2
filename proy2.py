@@ -379,7 +379,6 @@ class InventorySystem:
 
         if len(products) <= 1:
             return products
-
         #Elegir pivote
         pivot = products[len(products) // 2]
         pivot_value = getattr(pivot, key)
