@@ -160,7 +160,13 @@ class Sale:
     def date(self):
         return self._date
 
-    def __str__(self): return f"Venta #{self._sale_id} - {self._date} - Q{self._total:.2f}"
+    @property
+    def nit(self):
+        return self._nit
+
+    def __str__(self):
+        nit_info = f" - NIT: {self._nit}" if self._nit else ""
+        return f"Venta #{self._sale_id} - {self._date} - Q{self._total:.2f}{nit_info}"
 
     #Estructuras lineales: pilas y colas
 
@@ -288,6 +294,17 @@ class InventorySystem:
         #Lista todos los usuarios y retorna copia para proteger datos
         return self._users.copy() if self._validate_admin_permission() else []
 
+    def delete_user(self, username):
+        #Elimina un usuario del sistema
+        if not self._validate_admin_permission(): return False, "No tiene permisos"
+        if username == self._current_user.username: return False, "No puede eliminarse a sí mismo"
+        for user in self._users:
+            if user.username == username:
+                self._users.remove(user)
+                self._action_history.push(f"Usuario eliminado: {username}")
+                return True, "Usuario eliminado exitosamente"
+        return False, "Usuario no encontrado"
+
     def _validate_admin_permission(self):
         #Valida permisos de administrador
         return self._current_user and self._current_user.role == "administrador"
@@ -398,7 +415,18 @@ class InventorySystem:
 
     def get_products_sorted_by_category(self):
         # Obtiene productos ordenados por categoria usando QuickSort
-        return self.quick_sort_products(key='category')
+        sorted_products = self.quick_sort_products(key='category')
+        if not sorted_products:
+            return []
+
+        current_category = None
+        result = []
+        for product in sorted_products:
+            if product.category != current_category:
+                current_category = product.category
+                result.append(f"┌─── {current_category.upper()} ───")
+            result.append(product)
+        return result
 
     #METODOS DE BUSQUEDA BINARIA
     def binary_search_products(self, key, value):
@@ -554,6 +582,11 @@ def manage_users(system):
             success, msg = system.add_user(User(username, password, role, full_name))
             print(f"\n{msg}")
         elif option == "3":
+            print("\n--- ELIMINAR USUARIO ---")
+            username = input("Usuario a eliminar: ")
+            success, msg = system.delete_user(username)
+            print(f"\n{msg}")
+        elif option == "4":
             break
         else:
             print("\nOpción no válida")
@@ -650,6 +683,11 @@ def sort_products_menu(system):
     elif option == "4":
         products = system.get_products_sorted_by_category()
         print("\n PRODUCTOS ORDENADOS POR CATEGORÍA:")
+        for item in products:
+            if isinstance(item, str):
+                print(f"\n{item}")
+            else:
+                print(f"│ {item}")
     elif option == "5":
         return
     else:
@@ -736,6 +774,13 @@ def register_sale(system):
         total += subtotal
         print(f"{product.name} x{quantity} = Q{subtotal:.2f}")
     print(f"TOTAL: Q{total:.2f}")
+    # Solicitar NIT si la venta es mayor a 5000
+    nit = ""
+    if total > 5000:
+        nit = input("Para ventas mayores a Q5000 ingrese NIT: ").strip()
+        if not nit:
+            print("Venta cancelada: Se requiere NIT para ventas mayores a Q5000")
+            return
     if input("¿Confirmar venta? (s/n): ").lower() == 's':
         success, msg = system.create_sale(products_to_sell)
         print(msg)
@@ -824,6 +869,4 @@ def run_system():
                 else:
                     print("Opción no válida")
 
-
-# Iniciar el sistema
 run_system()
