@@ -33,11 +33,9 @@ class VentanaLogin(tk.Tk):
         conexion = sqlite3.connect("usuarios.db")
         cursor = conexion.cursor()
 
-        # Buscar en administradores
         cursor.execute("SELECT * FROM administradores WHERE codigo = ? AND contrasenia = ?", (usuario, contraseña))
         resultado_admin = cursor.fetchone()
 
-        # Buscar en empleados
         cursor.execute("SELECT * FROM empleados WHERE codigo = ? AND contrasenia = ?", (usuario, contraseña))
         resultado_empleado = cursor.fetchone()
 
@@ -61,7 +59,7 @@ class VentanaPrincipalEmpleados(tk.Toplevel):
 
         tk.Label(self,text="Ventana de empleados").place(x=100, y=100)
 
-        ttk.Button(self, text="Cerrar sesión", command=self.cerrar_sesion).place(x=100, y=900)
+        ttk.Button(self, text="Cerrar sesión", command=self.cerrar_sesion).place(x=100, y=200)
 
     def cerrar_sesion(self):
         self.destroy()
@@ -78,7 +76,7 @@ class VentanaPrincipalAdministradores(tk.Toplevel):
         self.ventana_login = ventana_login  # Guarda referencia
 
         tk.Label(self, text=f"Bienvenido, {usuario}", font=("Arial", 24)).place(x=100, y=100)
-        ttk.Button(self, text="Cerrar sesión", command=self.cerrar_sesion).place(x=100, y=900)
+        ttk.Button(self, text="Cerrar sesión", command=self.cerrar_sesion).place(x=100, y=200)
 
         ttk.Button(self, text="Ingresar usuarios", width=20, command=self.ingresar_nuevo).place(x=800, y=100)
 
@@ -108,7 +106,6 @@ class IngresarUsuarioNuevo(tk.Toplevel):
         contraseñaNUevo.place(x=100, y=230)
 
         ttk.Button(self, text="Volver", command=self.destroy).place(x=100, y=200)
-
 
 if __name__ == "__main__":
     app = VentanaLogin()
