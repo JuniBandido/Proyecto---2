@@ -526,10 +526,29 @@ class InventorySystem:
     # GESTION PRODUCTOS
     def add_product(self, product):
         # Agrega un producto al inventario
-        if any(p.code == product.code for p in self._products): return False, "Código ya existe"
-        self._products.append(product)
-        if self._current_user: self._action_history.push(f"Producto agregado: {product.code}")
-        return True, "Producto agregado exitosamente"
+        if any(p.code == product.code for p in self._products):
+            return False, "Código ya existe"
+
+        try:
+            # Guardar en base de datos
+            conn = sqlite3.connect("tiendaelect.db")
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO productos (codigo, nombre, categoria, precio, cantidad, marca, descripcion)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (product.code, product.name, product.category, product.price, product.quantity, product.brand,
+                  product.description))
+            conn.commit()
+            conn.close()
+
+            # Agregar a la lista en memoria
+            self._products.append(product)
+            if self._current_user:
+                self._action_history.push(f"Producto agregado: {product.code}")
+            return True, "Producto agregado exitosamente"
+
+        except Exception as e:
+            return False, f"Error al guardar en base de datos: {e}"
 
     def search_product_by_code(self, code):
         # Busqueda secuencial por codigo
@@ -558,27 +577,66 @@ class InventorySystem:
 
     def update_product(self, code, **kwargs):
         # Actualiza un producto existente
-        if not self._validate_admin_permission(): return False, "No tiene permisos"
+        if not self._validate_admin_permission():
+            return False, "No tiene permisos"
+
         product = self.search_product_by_code(code)
-        if not product: return False, "Producto no encontrado"
+        if not product:
+            return False, "Producto no encontrado"
+
         try:
-            if 'name' in kwargs: product.name = kwargs['name']
-            if 'price' in kwargs: product.price = kwargs['price']
-            if 'quantity' in kwargs: product.quantity = kwargs['quantity']
-            if 'description' in kwargs: product.description = kwargs['description']
+            # Actualizar atributos del producto
+            if 'name' in kwargs:
+                product.name = kwargs['name']
+            if 'price' in kwargs:
+                product.price = kwargs['price']
+            if 'quantity' in kwargs:
+                product.quantity = kwargs['quantity']
+            if 'description' in kwargs:
+                product.description = kwargs['description']
+
+            # Actualizar en la base de datos
+            conn = sqlite3.connect("tiendaelect.db")
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE productos 
+                SET nombre = ?, categoria = ?, precio = ?, cantidad = ?, marca = ?, descripcion = ?
+                WHERE codigo = ?
+            """, (product.name, product.category, product.price, product.quantity, product.brand, product.description,
+                  code))
+            conn.commit()
+            conn.close()
+
             self._action_history.push(f"Producto actualizado: {code}")
             return True, "Producto actualizado exitosamente"
+
         except ValueError as e:
             return False, str(e)
+        except Exception as e:
+            return False, f"Error al actualizar en base de datos: {e}"
 
     def delete_product(self, code):
         # Elimina un producto del inventario
-        if not self._validate_admin_permission(): return False, "No tiene permisos"
+        if not self._validate_admin_permission():
+            return False, "No tiene permisos"
+
         product = self.search_product_by_code(code)
         if product:
-            self._products.remove(product)
-            self._action_history.push(f"Producto eliminado: {code}")
-            return True, "Producto eliminado exitosamente"
+            try:
+                # Eliminar de la base de datos
+                conn = sqlite3.connect("tiendaelect.db")
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM productos WHERE codigo = ?", (code,))
+                conn.commit()
+                conn.close()
+
+                # Eliminar de la lista en memoria
+                self._products.remove(product)
+                self._action_history.push(f"Producto eliminado: {code}")
+                return True, "Producto eliminado exitosamente"
+
+            except Exception as e:
+                return False, f"Error al eliminar de la base de datos: {e}"
         return False, "Producto no encontrado"
 
     def get_products_by_category(self, category):
@@ -1137,40 +1195,24 @@ class ElectricalStoreGUI:
         scrollbar.pack(side='right', fill='y')
 
     ############### MÉTODOS DE FUNCIONALIDAD #################
-    def refresh_inventory(self):  # arreglado
-        # esto limpia la tabla
+    def refresh_inventory(self):
+        # Esto limpia la tabla
         for item in self.inventory_tree.get_children():
             self.inventory_tree.delete(item)
 
         try:
-            import sqlite3
-            conn = sqlite3.connect("tiendaelect.db")
-            cursor = conn.cursor()
+            # Recargar productos desde el sistema (que ahora carga de la BD)
+            products = self.system.list_products()
 
-            # Por si la tabla no existe
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS productos (
-                    codigo TEXT PRIMARY KEY,
-                    nombre TEXT,
-                    categoria TEXT,
-                    precio REAL,
-                    cantidad INTEGER,
-                    marca TEXT,
-                    descripcion TEXT
-                )
-            """)
-            # aqui se consulkta la talba
-            cursor.execute("SELECT codigo, nombre, categoria, precio, cantidad, marca FROM productos")
-            productos = cursor.fetchall()
-
-            # inserta los objetos de la tabla productos
-            for codigo, nombre, categoria, precio, cantidad, marca in productos:
+            # Insertar los productos en el treeview
+            for product in products:
                 self.inventory_tree.insert('', 'end', values=(
-                    codigo, nombre, categoria,
-                    f"Q{precio:.2f}", cantidad, marca
+                    product.code, product.name, product.category,
+                    f"Q{product.price:.2f}", product.quantity, product.brand
                 ))
 
-            conn.close()
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudieron cargar los productos: {e}")
 
         except Exception as e:
             import tkinter.messagebox as messagebox
