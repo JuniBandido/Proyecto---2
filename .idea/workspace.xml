@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="fd2ed1f4-c531-44c7-9e5a-a6c740c44532" name="Changes" comment="señalizacion a los metodos ya arreglados">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="grafica" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;JuniBandido&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/JuniBandido/Proyecto---2.git&quot;,
+    &quot;accountId&quot;: &quot;90f5463c-8c5d-4138-95dc-d161af300ec7&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="3411cFuROX9hv5xm5XNGU0HQjS1" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.InterfazGraficaPrincipal.executor": "Run",
+    "Python.Tkinter-grafica.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.pruebas.executor": "Run",
+    "Python.pruebas2.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "DevChus"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-82724e2b1abb-e2d783800521-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-251.28293.52" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="fd2ed1f4-c531-44c7-9e5a-a6c740c44532" name="Changes" comment="" />
+      <created>1760366341393</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1760366341393</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Creacion Repo">
+      <option name="closed" value="true" />
+      <created>1760366573282</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1760366573282</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Interfaz grafica base - borrador">
+      <option name="closed" value="true" />
+      <created>1760366686304</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1760366686304</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Boton cerrar ventana">
+      <option name="closed" value="true" />
+      <created>1760370494538</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1760370494538</updated>
+    </task>
+    <task id="LOCAL-00004" summary="ventana emergente">
+      <option name="closed" value="true" />
+      <created>1760476723264</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1760476723264</updated>
+    </task>
+    <task id="LOCAL-00005" summary="ventana emergente">
+      <option name="closed" value="true" />
+      <created>1760625284543</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1760625284543</updated>
+    </task>
+    <task id="LOCAL-00006" summary="cambios en la ventana principal">
+      <option name="closed" value="true" />
+      <created>1761360816428</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1761360816428</updated>
+    </task>
+    <task id="LOCAL-00007" summary="cambios en la ventana principal">
+      <option name="closed" value="true" />
+      <created>1761369603845</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1761369603845</updated>
+    </task>
+    <task id="LOCAL-00008" summary="cambio de metodo para grafica">
+      <option name="closed" value="true" />
+      <created>1761629451116</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1761629451116</updated>
+    </task>
+    <task id="LOCAL-00009" summary="imagen ejemplo de interfaz">
+      <option name="closed" value="true" />
+      <created>1761634258220</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1761634258220</updated>
+    </task>
+    <task id="LOCAL-00010" summary="ventana emergente nueva">
+      <option name="closed" value="true" />
+      <created>1761636956381</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1761636956381</updated>
+    </task>
+    <task id="LOCAL-00011" summary="cambio de color de boton">
+      <option name="closed" value="true" />
+      <created>1761637140680</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1761637140680</updated>
+    </task>
+    <task id="LOCAL-00012" summary="ligero cambio de posicion de los label principales">
+      <option name="closed" value="true" />
+      <created>1761653250200</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1761653250200</updated>
+    </task>
+    <task id="LOCAL-00013" summary="estoy cocinando">
+      <option name="closed" value="true" />
+      <created>1761791749860</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1761791749860</updated>
+    </task>
+    <task id="LOCAL-00014" summary="estoy cocinando">
+      <option name="closed" value="true" />
+      <created>1761835415009</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1761835415009</updated>
+    </task>
+    <task id="LOCAL-00015" summary="no encontraba el boton de cerrar sesion">
+      <option name="closed" value="true" />
+      <created>1761835937395</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1761835937395</updated>
+    </task>
+    <task id="LOCAL-00016" summary="coocking">
+      <option name="closed" value="true" />
+      <created>1761838540722</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1761838540722</updated>
+    </task>
+    <task id="LOCAL-00017" summary="agregué un nuevo producto">
+      <option name="closed" value="true" />
+      <created>1762137636778</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1762137636778</updated>
+    </task>
+    <task id="LOCAL-00018" summary="mostrar productos de la base de datos unicamente">
+      <option name="closed" value="true" />
+      <created>1762139603304</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1762139603304</updated>
+    </task>
+    <task id="LOCAL-00019" summary="señalizacion a los metodos ya arreglados">
+      <option name="closed" value="true" />
+      <created>1762139758336</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1762139758336</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Creacion Repo" />
+    <MESSAGE value="Interfaz grafica base - borrador" />
+    <MESSAGE value="Boton cerrar ventana" />
+    <MESSAGE value="ventana emergente" />
+    <MESSAGE value="cambios en la ventana principal" />
+    <MESSAGE value="cambio de metodo para grafica" />
+    <MESSAGE value="imagen ejemplo de interfaz" />
+    <MESSAGE value="ventana emergente nueva" />
+    <MESSAGE value="cambio de color de boton" />
+    <MESSAGE value="ligero cambio de posicion de los label principales" />
+    <MESSAGE value="estoy cocinando" />
+    <MESSAGE value="no encontraba el boton de cerrar sesion" />
+    <MESSAGE value="coocking" />
+    <MESSAGE value="agregué un nuevo producto" />
+    <MESSAGE value="mostrar productos de la base de datos unicamente" />
+    <MESSAGE value="señalizacion a los metodos ya arreglados" />
+    <option name="LAST_COMMIT_MESSAGE" value="señalizacion a los metodos ya arreglados" />
+  </component>
+</project>
