@@ -632,6 +632,15 @@ class InventorySystem:
         except Exception as e:
             return False, f"Error al guardar en base de datos: {e}"
 
+    def search_product_by_name(self, toSearch):
+        results = []
+        for product in self._products:
+            if toSearch in product.name.lower():
+                results.append(product)
+                print("aqui bien")
+                return results
+        return None
+
     def search_product_by_code(self, code):
         for product in self._products:
             if product.code == code:
@@ -947,7 +956,7 @@ class ElectricalStoreGUI:
     def __init__(self, system):
         self.system = system
         self.root = tk.Tk()
-        self.root.title("Sistema de Gestión - Tienda de Material Eléctrico")
+        self.root.title("Materiales Electricos Anghie - Login Page")
         self.root.state("zoomed")
         self.root.configure(bg='gray49')
 
@@ -1004,6 +1013,15 @@ class ElectricalStoreGUI:
         test_frame = ttk.Frame(main_frame)
         test_frame.pack(pady=10)
         ttk.Label(test_frame, text="Usuarios prueba: admin/admin123  o  vendedor/vend123", font=('Arial', 9)).pack()
+
+        local_label = tk.Label(text="Oficina: Lotificación San Francisco, Las Pozas. Morales Izabal. Guatemala", bg='gray49')
+        local_label.pack(pady=10, padx=10, anchor="w")
+
+        number_label = tk.Label(text="Contacto: 5317-2913", bg='gray49')
+        number_label.pack(pady=10, padx=10, anchor="w")
+
+        correo_label = tk.Label(text="Correo: info@inversionesyimsa.com", bg='gray49')
+        correo_label.pack(pady=10, padx=10, anchor="w")
 
         self.username_entry.focus()
         self.password_entry.bind('<Return>', lambda e: self.login())
@@ -1763,16 +1781,56 @@ class ElectricalStoreGUI:
             else:
                 messagebox.showerror("Error", message)
 
+    def show_search_products_for_sale(self, products):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Búsqueda de producto")
+        dialog.geometry("600x400")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        frame = ttk.Frame(dialog, padding=10)
+        frame.pack(fill="both", expand=True)
+
+        columns = ("Código", "Nombre", "Precio", "Stock", "Marca")
+        tree = ttk.Treeview(frame, columns=columns, show="headings", selectmode="browse")
+        for col in columns:
+            tree.heading(col, text=col)
+            tree.column(col, width=100)
+
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+        tree.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        for product in products:
+            if hasattr(product, "code"):
+                tree.insert("", "end", values=(
+                    product.code, product.name, f"Q{product.price:.2f}", product.quantity, product.brand
+                ))
+            else:
+                tree.insert("", "end", values=(str(product), "", "", "", ""))
+
+        def select_product():
+            selected = tree.selection()
+            if not selected:
+                messagebox.showwarning("Advertencia", "Seleccione un producto")
+                return
+            item = tree.item(selected[0])
+            values = item["values"]
+            messagebox.showinfo("Seleccionado", f"Has elegido: {values[1]} (Código: {values[0]})")
+            dialog.destroy()
+
+        ttk.Button(dialog, text="Seleccionar", command=select_product).pack(pady=10)
+
+
     def search_product_for_sale(self):
-        code = self.sale_code_entry.get().upper()
+        code = self.sale_code_entry.get().lower()
         if not code:
             return
 
-        product = self.system.search_product_by_code(code)
+        product = self.system.search_product_by_name(code)
         if product:
-            self.product_info_label.config(
-                text=f"{product.name} - Q{product.price:.2f} - Stock: {product.quantity}"
-            )
+            self.show_search_products_for_sale(product)
         else:
             self.product_info_label.config(text="Producto no encontrado")
 
