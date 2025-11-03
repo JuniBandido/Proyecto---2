@@ -926,7 +926,7 @@ class ElectricalStoreGUI:
         scrollbar.pack(side='right', fill='y')
 
     ############### MÉTODOS DE FUNCIONALIDAD #################
-    def refresh_inventory(self):
+    def refresh_inventory(self): #arreglado
         #esto limpia la tabla
         for item in self.inventory_tree.get_children():
             self.inventory_tree.delete(item)
@@ -1028,7 +1028,7 @@ class ElectricalStoreGUI:
                 f"Q{product.price:.2f}", product.quantity, product.brand
             ))
 
-    def show_add_product_dialog(self):
+    def show_add_product_dialog(self): #arreglado
         dialog = tk.Toplevel(self.root)
         dialog.title("Agregar Producto")
         dialog.geometry("400x500")
