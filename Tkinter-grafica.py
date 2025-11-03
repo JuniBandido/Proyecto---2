@@ -927,15 +927,43 @@ class ElectricalStoreGUI:
 
     ############### MÉTODOS DE FUNCIONALIDAD #################
     def refresh_inventory(self):
+        #esto limpia la tabla
         for item in self.inventory_tree.get_children():
             self.inventory_tree.delete(item)
 
-        products = self.system.list_products()
-        for product in products:
-            self.inventory_tree.insert('', 'end', values=(
-                product.code, product.name, product.category,
-                f"Q{product.price:.2f}", product.quantity, product.brand
-            ))
+        try:
+            import sqlite3
+            conn = sqlite3.connect("tiendaelect.db")
+            cursor = conn.cursor()
+
+            # Por si la tabla no existe
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS productos (
+                    codigo TEXT PRIMARY KEY,
+                    nombre TEXT,
+                    categoria TEXT,
+                    precio REAL,
+                    cantidad INTEGER,
+                    marca TEXT,
+                    descripcion TEXT
+                )
+            """)
+            #aqui se consulkta la talba
+            cursor.execute("SELECT codigo, nombre, categoria, precio, cantidad, marca FROM productos")
+            productos = cursor.fetchall()
+
+            #inserta los objetos de la tabla productos
+            for codigo, nombre, categoria, precio, cantidad, marca in productos:
+                self.inventory_tree.insert('', 'end', values=(
+                    codigo, nombre, categoria,
+                    f"Q{precio:.2f}", cantidad, marca
+                ))
+
+            conn.close()
+
+        except Exception as e:
+            import tkinter.messagebox as messagebox
+            messagebox.showerror("Error", f"No se pudieron cargar los productos: {e}")
 
     def sort_by_name(self):
         for item in self.inventory_tree.get_children():
@@ -1030,7 +1058,7 @@ class ElectricalStoreGUI:
         # Función para guardar el producto
             def save_product():
                 try:
-                    # 1️⃣ Leer datos del formulario
+                    #Leer datos del formulario
                     codigo = entries['code'].get().strip().upper()
                     nombre = entries['name'].get().strip()
                     categoria = entries['category'].get().strip()
@@ -1083,7 +1111,7 @@ class ElectricalStoreGUI:
                     dialog.destroy()
 
                 except sqlite3.IntegrityError:
-                    messagebox.showerror("Error", f"Ya existe un producto con el código '{codigo}'.")
+                    messagebox.showerror("Error", f"Ya existe un producto con el código.")
                 except Exception as e:
                     messagebox.showerror("Error", f"Ocurrió un error: {e}")
 
