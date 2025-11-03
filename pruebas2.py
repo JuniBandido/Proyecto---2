@@ -1187,7 +1187,7 @@ class ElectricalStoreGUI:
         product_frame = ttk.Frame(new_sale_frame)
         product_frame.pack(fill='x', pady=5)
 
-        ttk.Label(product_frame, text="Código:").pack(side='left', padx=5)
+        ttk.Label(product_frame, text="Nombre (Palabra clave):").pack(side='left', padx=5)
         self.sale_code_entry = ttk.Entry(product_frame, width=15)
         self.sale_code_entry.pack(side='left', padx=5)
 
@@ -1789,7 +1789,7 @@ class ElectricalStoreGUI:
     def show_search_products_for_sale(self, products):
         dialog = tk.Toplevel(self.root)
         dialog.title("Búsqueda de producto")
-        dialog.geometry("600x600")
+        dialog.geometry("900x600")
         dialog.transient(self.root)
         dialog.grab_set()
 
