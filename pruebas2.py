@@ -5,7 +5,8 @@
 from collections import deque
 from datetime import datetime
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
+from tkinter import messagebox
 import sqlite3
 
 
@@ -1212,6 +1213,7 @@ class ElectricalStoreGUI:
                 ))
 
         except Exception as e:
+            from tkinter import messagebox
             messagebox.showerror("Error", f"No se pudieron cargar los productos: {e}")
 
         except Exception as e:
