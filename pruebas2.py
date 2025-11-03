@@ -632,14 +632,19 @@ class InventorySystem:
         except Exception as e:
             return False, f"Error al guardar en base de datos: {e}"
 
-    def search_product_by_name(self, toSearch):
-        results = []
-        for product in self._products:
-            if toSearch in product.name.lower():
-                results.append(product)
-                print("aqui bien")
-                return results
-        return None
+    def search_product_by_name(self, name):
+
+        import sqlite3
+        conn = sqlite3.connect("tiendaelect.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT codigo, nombre, categoria, precio, cantidad, marca, descripcion
+            FROM productos
+            WHERE LOWER(nombre) LIKE ?
+        """, (f"%{name.lower()}%",))
+        rows = cursor.fetchall()
+        conn.close()
+        return [Product(*row) for row in rows]
 
     def search_product_by_code(self, code):
         for product in self._products:
@@ -1784,7 +1789,7 @@ class ElectricalStoreGUI:
     def show_search_products_for_sale(self, products):
         dialog = tk.Toplevel(self.root)
         dialog.title("Búsqueda de producto")
-        dialog.geometry("600x400")
+        dialog.geometry("600x600")
         dialog.transient(self.root)
         dialog.grab_set()
 
@@ -1834,15 +1839,16 @@ class ElectricalStoreGUI:
         ttk.Button(dialog, text="Seleccionar", command=select_product).pack(pady=10)
 
     def search_product_for_sale(self):
-        code = self.sale_code_entry.get().lower()
-        if not code:
+        search_text = self.sale_code_entry.get().strip()
+        if not search_text:
             return
 
-        product = self.system.search_product_by_name(code)
-        if product:
-            self.show_search_products_for_sale(product)
+        products = self.system.search_products_by_name(search_text)
+
+        if products:
+            self.show_search_products_for_sale(products)
         else:
-            self.product_info_label.config(text="Producto no encontrado")
+            self.product_info_label.config(text="No se encontraron productos con esa palabra")
 
     def add_to_cart(self):
         # 🔹 Si hay producto seleccionado, usarlo
