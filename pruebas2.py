@@ -1796,19 +1796,17 @@ class ElectricalStoreGUI:
         for col in columns:
             tree.heading(col, text=col)
             tree.column(col, width=100)
+        tree.pack(fill="both", expand=True)
 
         scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=scrollbar.set)
-        tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
+        # Insertar productos
         for product in products:
-            if hasattr(product, "code"):
-                tree.insert("", "end", values=(
-                    product.code, product.name, f"Q{product.price:.2f}", product.quantity, product.brand
-                ))
-            else:
-                tree.insert("", "end", values=(str(product), "", "", "", ""))
+            tree.insert("", "end", values=(
+                product.code, product.name, f"Q{product.price:.2f}", product.quantity, product.brand
+            ))
 
         def select_product():
             selected = tree.selection()
@@ -1817,11 +1815,23 @@ class ElectricalStoreGUI:
                 return
             item = tree.item(selected[0])
             values = item["values"]
-            messagebox.showinfo("Seleccionado", f"Has elegido: {values[1]} (Código: {values[0]})")
+
+            # 🔹 Guardar producto seleccionado
+            self.selected_product = {
+                "code": values[0],
+                "name": values[1],
+                "price": float(str(values[2]).replace("Q", "")),
+                "stock": int(values[3]),
+                "brand": values[4]
+            }
+
+            # 🔹 Mostrar el código en la entrada de venta (opcional)
+            self.sale_code_entry.delete(0, tk.END)
+            self.sale_code_entry.insert(0, self.selected_product["code"])
+
             dialog.destroy()
 
         ttk.Button(dialog, text="Seleccionar", command=select_product).pack(pady=10)
-
 
     def search_product_for_sale(self):
         code = self.sale_code_entry.get().lower()
@@ -1835,8 +1845,14 @@ class ElectricalStoreGUI:
             self.product_info_label.config(text="Producto no encontrado")
 
     def add_to_cart(self):
-        code = self.sale_code_entry.get().upper()
-        quantity_str = self.sale_quantity_entry.get()
+        # 🔹 Si hay producto seleccionado, usarlo
+        if hasattr(self, "selected_product") and self.selected_product:
+            code = self.selected_product["code"].strip().upper()
+        else:
+            # 🔹 Si no hay selección, usar el campo de código
+            code = self.sale_code_entry.get().strip().upper()
+
+        quantity_str = self.sale_quantity_entry.get().strip()
 
         if not code or not quantity_str:
             messagebox.showwarning("Advertencia", "Ingrese código y cantidad")
@@ -1851,21 +1867,25 @@ class ElectricalStoreGUI:
             messagebox.showerror("Error", "Cantidad inválida")
             return
 
+        # 🔹 Buscar el producto en la base de datos
         product = self.system.search_product_by_code(code)
         if not product:
-            messagebox.showerror("Error", "Producto no encontrado")
+            messagebox.showerror("Error", f"Producto '{code}' no encontrado en la base de datos.")
             return
 
+        # 🔹 Validar stock
         if product.quantity < quantity:
             messagebox.showerror("Error", f"Stock insuficiente. Disponible: {product.quantity}")
             return
 
+        # 🔹 Si ya está en el carrito, actualiza cantidad
         for i, item in enumerate(self.cart_items):
             if item['code'] == code:
                 self.cart_items[i]['quantity'] += quantity
                 self.cart_items[i]['subtotal'] = self.cart_items[i]['quantity'] * product.price
                 break
         else:
+            # 🔹 Si no está, agregarlo como nuevo
             self.cart_items.append({
                 'code': code,
                 'name': product.name,
@@ -1875,6 +1895,11 @@ class ElectricalStoreGUI:
             })
 
         self.update_cart_display()
+
+        # 🔹 Limpiar campos y selección
+        self.sale_code_entry.delete(0, tk.END)
+        self.sale_quantity_entry.delete(0, tk.END)
+        self.selected_product = None
 
     def update_cart_display(self):
         for item in self.cart_tree.get_children():
