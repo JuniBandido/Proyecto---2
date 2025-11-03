@@ -1789,7 +1789,7 @@ class ElectricalStoreGUI:
     def show_search_products_for_sale(self, products):
         dialog = tk.Toplevel(self.root)
         dialog.title("Búsqueda de producto")
-        dialog.geometry("900x600")
+        dialog.geometry("900x500")
         dialog.transient(self.root)
         dialog.grab_set()
 
