@@ -5,14 +5,15 @@
 from collections import deque
 from datetime import datetime
 import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 import sqlite3
+import tkinter.simpledialog as simpledialog
+import re  # Para validación de NIT
 
 
 # ESTRUCTURAS DE DATOS - CLASES BASE
 
-class Product:  # Clase para representar un producto en el inventario
+class Product:
     def __init__(self, code, name, category, price, quantity, brand="", description=""):
         self._code = code
         self._name = name
@@ -22,7 +23,6 @@ class Product:  # Clase para representar un producto en el inventario
         self._brand = brand
         self._description = description
 
-    # Getters - Acceso controlado a atributos
     @property
     def code(self):
         return self._code
@@ -51,7 +51,6 @@ class Product:  # Clase para representar un producto en el inventario
     def description(self):
         return self._description
 
-    # Setters - Modificación controlada con validaciones
     @name.setter
     def name(self, value):
         if value and len(value) > 0:
@@ -78,13 +77,15 @@ class Product:  # Clase para representar un producto en el inventario
         self._description = value
 
     def reduce_stock(self, amount):
-        # Metodo para reducir stock de forma ordenada
-        if amount <= self._quantity: self._quantity -= amount; return True
+        if amount <= self._quantity:
+            self._quantity -= amount
+            return True
         return False
 
     def add_stock(self, amount):
-        # Metodo para agregar stock
-        if amount > 0: self._quantity += amount; return True
+        if amount > 0:
+            self._quantity += amount
+            return True
         return False
 
     def __str__(self):
@@ -92,13 +93,13 @@ class Product:  # Clase para representar un producto en el inventario
 
 
 class User:
-    # Clase para representar usuarios del sistema
-
     def __init__(self, username, password, role, full_name):
-        self._username, self._password, self._role, self._full_name = username, password, role, full_name
+        self._username = username
+        self._password = password
+        self._role = role
+        self._full_name = full_name
         self._active = True
 
-    # Getters
     @property
     def username(self):
         return self._username
@@ -115,22 +116,22 @@ class User:
     def active(self):
         return self._active
 
-    # Setters
     @active.setter
     def active(self, value):
         self._active = value
 
     @full_name.setter
     def full_name(self, value):
-        if value and len(value) > 0: self._full_name = value
+        if value and len(value) > 0:
+            self._full_name = value
 
     def verify_password(self, password):
-        # Metodo público para verificar password sin exponer el atributo privado
         return self._password == password
 
     def change_password(self, old_password, new_password):
-        # Permite cambiar la contraseña de forma segura
-        if self.verify_password(old_password): self._password = new_password; return True
+        if self.verify_password(old_password):
+            self._password = new_password
+            return True
         return False
 
     def __str__(self):
@@ -138,14 +139,13 @@ class User:
 
 
 class Sale:
-    # Clase para representar una venta
-
-    def __init__(self, sale_id, username, products, total):
+    def __init__(self, sale_id, username, products, total, nit=""):
         self._sale_id = sale_id
         self._username = username
         self._products = products
         self._total = total
         self._date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self._nit = nit
 
     @property
     def sale_id(self):
@@ -157,7 +157,7 @@ class Sale:
 
     @property
     def products(self):
-        return self._products.copy()  # Retorna copia para evitar modificación externa
+        return self._products.copy()
 
     @property
     def total(self):
@@ -175,11 +175,8 @@ class Sale:
         nit_info = f" - NIT: {self._nit}" if self._nit else ""
         return f"Venta #{self._sale_id} - {self._date} - Q{self._total:.2f}{nit_info}"
 
-    # Estructuras lineales: pilas y colas
-
 
 class Stack:
-    # Implementacion de pila
     def __init__(self):
         self._items = []
 
@@ -202,11 +199,10 @@ class Stack:
         self._items = []
 
     def show_all(self):
-        return self._items.copy()  # Aca retornamos la copia para proteger sus datos
+        return self._items.copy()
 
 
 class Queue:
-    # Implementacion de cola
     def __init__(self):
         self._items = deque()
 
@@ -229,30 +225,26 @@ class Queue:
         self._items.clear()
 
     def show_all(self):
-        return list(self._items)  # Retorna copia
+        return list(self._items)
 
 
-# Sistema principal, gestor de inventario
 class InventorySystem:
-    # Sistema principal de gestion de inventario
     def __init__(self):
         self._products = []
         self._users = []
-        self._sales = []  # Para los datos
-        self._sale_counter = 1  # Contador para los ID de ventas
-        self._action_history = Stack()  # Historial de acciones
-        self._pending_tasks = Queue()  # Historial de tareas pendientes
-        self._current_user = None  # Usuario actual
-        self._initialize_database() #Inicializar la base de datos primero
+        self._sales = []
+        self._sale_counter = 1
+        self._action_history = Stack()
+        self._pending_tasks = Queue()
+        self._current_user = None
+        self._initialize_database()
         self._initialize_default_data()
 
     def _initialize_database(self):
-        #Inicializa la base de datos y crea las tablas si no existen
         try:
             conn = sqlite3.connect("tiendaelect.db")
             cursor = conn.cursor()
 
-            # Tabla de productos
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS productos (
                     codigo TEXT PRIMARY KEY,
@@ -265,7 +257,6 @@ class InventorySystem:
                 )
             """)
 
-            # Tablas Administradores y Empleados
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS administradores (
                     username TEXT PRIMARY KEY,
@@ -284,7 +275,6 @@ class InventorySystem:
                 )
             """)
 
-            # Tabla de ventas
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS ventas (
                     sale_id INTEGER PRIMARY KEY,
@@ -295,7 +285,6 @@ class InventorySystem:
                 )
             """)
 
-            # Tabla Detalles de ventas
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS ventas_detalles (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -316,14 +305,12 @@ class InventorySystem:
             print(f"Error inicializando base de datos: {e}")
 
     def _load_users_from_db(self):
-        #Carga usuarios desde las tablas separadas de administradores y empleados
         try:
             conn = sqlite3.connect("tiendaelect.db")
             cursor = conn.cursor()
 
             self._users = []
 
-            # Cargar administradores
             cursor.execute("SELECT username, password, full_name, active FROM administradores")
             admins_data = cursor.fetchall()
             for username, password, full_name, active in admins_data:
@@ -331,7 +318,6 @@ class InventorySystem:
                 user.active = bool(active)
                 self._users.append(user)
 
-            # Cargar empleados
             cursor.execute("SELECT username, password, full_name, active FROM empleados")
             empleados_data = cursor.fetchall()
             for username, password, full_name, active in empleados_data:
@@ -344,7 +330,6 @@ class InventorySystem:
             print(f"Error cargando usuarios: {e}")
 
     def _save_user_to_db(self, user):
-        #Guarda un usuario en la tabla correspondiente según su rol
         try:
             conn = sqlite3.connect("tiendaelect.db")
             cursor = conn.cursor()
@@ -354,7 +339,7 @@ class InventorySystem:
                     INSERT OR REPLACE INTO administradores (username, password, full_name, active)
                     VALUES (?, ?, ?, ?)
                 """, (user.username, user._password, user.full_name, user.active))
-            else:  # dependiente
+            else:
                 cursor.execute("""
                     INSERT OR REPLACE INTO empleados (username, password, full_name, active)
                     VALUES (?, ?, ?, ?)
@@ -368,132 +353,178 @@ class InventorySystem:
             return False
 
     def _load_products_from_db(self):
-        #Carga productos desde la base de datos
         try:
             conn = sqlite3.connect("tiendaelect.db")
             cursor = conn.cursor()
 
-            # Verificar si la tabla existe
-            cursor.execute("""
-                SELECT name FROM sqlite_master 
-                WHERE type='table' AND name='productos'
-            """)
-            table_exists = cursor.fetchone()
+            cursor.execute("SELECT codigo, nombre, categoria, precio, cantidad, marca, descripcion FROM productos")
+            products_data = cursor.fetchall()
 
-            if table_exists:
-                cursor.execute("SELECT codigo, nombre, categoria, precio, cantidad, marca, descripcion FROM productos")
-                products_data = cursor.fetchall()
-
-                self._products = []
-                for codigo, nombre, categoria, precio, cantidad, marca, descripcion in products_data:
-                    product = Product(codigo, nombre, categoria, precio, cantidad, marca, descripcion)
-                    self._products.append(product)
-            else:
-                # Si la tabla no existe, productos vacíos
-                self._products = []
+            self._products = []
+            for codigo, nombre, categoria, precio, cantidad, marca, descripcion in products_data:
+                product = Product(codigo, nombre, categoria, precio, cantidad, marca, descripcion)
+                self._products.append(product)
 
             conn.close()
         except Exception as e:
             print(f"Error cargando productos: {e}")
             self._products = []
 
-    def _initialize_default_data(self):
-        #Carga datos iniciales desde la base de datos
-        self._load_users_from_db()  # CARGA usuarios desde base de datos
-        self._load_products_from_db()  # CARGA productos desde base de datos
+    def _load_sales_from_db(self):
+        try:
+            conn = sqlite3.connect("tiendaelect.db")
+            cursor = conn.cursor()
 
-        # Si no hay usuarios, crea los predeterminados
+            cursor.execute("SELECT sale_id, username, total, date, nit FROM ventas")
+            sales_data = cursor.fetchall()
+
+            self._sales = []
+            for sale_id, username, total, date, nit in sales_data:
+                cursor.execute("""
+                    SELECT product_code, product_name, quantity, price, subtotal 
+                    FROM ventas_detalles WHERE sale_id = ?
+                """, (sale_id,))
+                details_data = cursor.fetchall()
+
+                products = []
+                for product_code, product_name, quantity, price, subtotal in details_data:
+                    products.append({
+                        'code': product_code,
+                        'name': product_name,
+                        'quantity': quantity,
+                        'price': price,
+                        'subtotal': subtotal
+                    })
+
+                sale = Sale(sale_id, username, products, total, nit)
+                sale._date = date
+                self._sales.append(sale)
+
+                if sale_id >= self._sale_counter:
+                    self._sale_counter = sale_id + 1
+
+            conn.close()
+        except Exception as e:
+            print(f"Error cargando ventas: {e}")
+
+    def _validate_nit(self, nit):
+        """Valida el formato del NIT guatemalteco"""
+        if not nit:
+            return False
+        # Formato básico: 1234567-8 o 12345678
+        pattern = r'^\d{7,8}-?\d?$'
+        return bool(re.match(pattern, nit))
+
+    def _initialize_default_data(self):
+        self._load_users_from_db()
+        self._load_products_from_db()
+        self._load_sales_from_db()
+
         if not self._users:
-            # Administrador predeterminado
             admin = User("admin", "admin123", "administrador", "Administrador Principal")
             self._save_user_to_db(admin)
 
-            # Empleado predeterminado
             empleado = User("vendedor", "vend123", "dependiente", "Juan Perez")
             self._save_user_to_db(empleado)
 
-            # Recargar usuarios después de crear los predeterminados
             self._load_users_from_db()
 
-        # Si no hay productos, crea los predeterminados
         if not self._products:
             productos_ejemplo = [
                 Product("BOMB-LED-9W", "Bombillo LED 9W", "Iluminación", 25.50, 50, "Philips", "Luz día 6500K E27"),
                 Product("TUBO-LED-4P", "Tubo LED 4 Pies", "Iluminación", 45.00, 30, "Sylvania", "Blanco frío 18W T8"),
-                Product("LAMP-LED-PANEL", "Panel LED 600x600", "Iluminación", 180.00, 15, "Osram","36W para cielo falso"),
+                Product("LAMP-LED-PANEL", "Panel LED 600x600", "Iluminación", 180.00, 15, "Osram",
+                        "36W para cielo falso"),
                 Product("SPOT-LED-5W", "Spot LED Empotrable", "Iluminación", 32.00, 40, "Technolite", "5W 3000K GU10"),
-                Product("TOMA-DOBLE-15A", "Tomacorriente Doble 15A", "Accesorios", 18.75, 100, "Steck","Blanco polar 250V"),
+                Product("TOMA-DOBLE-15A", "Tomacorriente Doble 15A", "Accesorios", 18.75, 100, "Steck",
+                        "Blanco polar 250V"),
                 Product("APAG-SIMPLE-15A", "Apagador Simple 15A", "Accesorios", 12.50, 80, "Legrand", "Blanco mate"),
                 Product("BREAKER-20A", "Breaker 20A 1P", "Accesorios", 45.00, 60, "Square D", "Para tablero principal"),
-                Product("CAJA-RECT-4x2", "Caja Rectangular 4x2", "Accesorios", 8.00, 120, "Conductores","Para apagadores"),
+                Product("CAJA-RECT-4x2", "Caja Rectangular 4x2", "Accesorios", 8.00, 120, "Conductores",
+                        "Para apagadores"),
                 Product("CABLE-TW-12", "Cable TW Calibre 12", "Cables", 3.50, 500, "Condumex", "75m rollo negro"),
                 Product("CABLE-THWN-10", "Cable THWN Calibre 10", "Cables", 5.25, 300, "Camesa", "75m rollo rojo"),
                 Product("CABLE-PAR-TRENZ", "Cable Par Trenzado CAT6", "Cables", 1.20, 200, "Belden", "305m caja datos"),
                 Product("CABLE-COAX-RG6", "Cable Coaxial RG6", "Cables", 0.85, 150, "Commscope", "Para TV y video"),
                 Product("TUBO-EMT-1/2", "Tubo EMT 1/2", "Canalización", 35.00, 80, "Camesa", "3 metros galvanizado"),
                 Product("TUBO-PVC-3/4", "Tubo PVC 3/4", "Canalización", 28.50, 70, "Durman", "3 metros schedule 40"),
-                Product("DUCTO-FLEX-1/2", "Ducto Flexible 1/2", "Canalización", 15.75, 90, "Electroduct","Metálico 2 metros"),
+                Product("DUCTO-FLEX-1/2", "Ducto Flexible 1/2", "Canalización", 15.75, 90, "Electroduct",
+                        "Metálico 2 metros"),
                 Product("CANALETA-40x20", "Canaleta 40x20mm", "Canalización", 12.00, 110, "Panduit", "PVC blanco 2m"),
-                Product("VENT-TECHO-48", "Ventilador de Techo 48", "Ventilación", 450.00, 12, "Hunter","Madera 5 aspas"),
-                Product("VENT-BAÑO-100", "Ventilador de Baño 100CFM", "Ventilación", 185.00, 25, "Broan","Extractor silencioso"),
-                Product("VENT-PEDESTAL-16", "Ventilador Pedestal 16", "Ventilación", 220.00, 18, "Lasko","3 velocidades"),
+                Product("VENT-TECHO-48", "Ventilador de Techo 48", "Ventilación", 450.00, 12, "Hunter",
+                        "Madera 5 aspas"),
+                Product("VENT-BAÑO-100", "Ventilador de Baño 100CFM", "Ventilación", 185.00, 25, "Broan",
+                        "Extractor silencioso"),
+                Product("VENT-PEDESTAL-16", "Ventilador Pedestal 16", "Ventilación", 220.00, 18, "Lasko",
+                        "3 velocidades"),
                 Product("VENT-TUBO-4", "Ventilador de Tubo 4", "Ventilación", 95.00, 30, "S&P", "Para ductos 100CFM"),
-                Product("CONEC-HEMBRA-15A", "Conector Hembra 15A", "Conectores", 4.50, 200, "Ideal","Para cable #12-14"),
-                Product("TERMINAL-ANILLO-12", "Terminal Anillo #12", "Conectores", 0.25, 500, "3M","Estañado para 12-10"),
+                Product("CONEC-HEMBRA-15A", "Conector Hembra 15A", "Conectores", 4.50, 200, "Ideal",
+                        "Para cable #12-14"),
+                Product("TERMINAL-ANILLO-12", "Terminal Anillo #12", "Conectores", 0.25, 500, "3M",
+                        "Estañado para 12-10"),
                 Product("CINTA-AISL-NEG", "Cinta Aislante Negra", "Conectores", 12.00, 75, "Scotch", "3/4 x 20m"),
-                Product("TAPA-TOMA-BCO", "Tapa para Tomacorriente", "Conectores", 2.00, 300, "Steck","Blanco seguridad niños"),
-                Product("SENS-MOV-PIR", "Sensor de Movimiento PIR", "Automatización", 120.00, 25, "Leviton","180° interior/exterior"),
-                Product("TIMER-DIGI-7D", "Timer Digital 7 Días", "Automatización", 85.00, 20, "Intermatic","Programable 40A"),
-                Product("DIMMER-LED-600W", "Dimmer para LED 600W", "Automatización", 65.00, 35, "Lutron","Control intensidad"),
-                Product("CONTROL-MOTOR", "Control para Motor 1HP", "Automatización", 150.00, 15, "Siemens","Reversa y protección")
+                Product("TAPA-TOMA-BCO", "Tapa para Tomacorriente", "Conectores", 2.00, 300, "Steck",
+                        "Blanco seguridad niños"),
+                Product("SENS-MOV-PIR", "Sensor de Movimiento PIR", "Automatización", 120.00, 25, "Leviton",
+                        "180° interior/exterior"),
+                Product("TIMER-DIGI-7D", "Timer Digital 7 Días", "Automatización", 85.00, 20, "Intermatic",
+                        "Programable 40A"),
+                Product("DIMMER-LED-600W", "Dimmer para LED 600W", "Automatización", 65.00, 35, "Lutron",
+                        "Control intensidad"),
+                Product("CONTROL-MOTOR", "Control para Motor 1HP", "Automatización", 150.00, 15, "Siemens",
+                        "Reversa y protección")
             ]
             for producto in productos_ejemplo:
                 self.add_product(producto)
 
     @property
     def current_user(self):
-        return self._current_user  # Getter para usuario actual
+        return self._current_user
 
-    # GESTION DE USUARIOS
     def login(self, username, password):
-        # Inicia sesion de usuario
         for user in self._users:
             if user.username == username and user.verify_password(password):
                 if user.active:
                     self._current_user = user
-                    self._action_history.push(f"Ingresar: {username}")
+                    self._action_history.push(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Ingresar: {username}")
                     return True, f"Bienvenido {user.full_name}"
                 else:
                     return False, "Usuario inactivo"
         return False, "Usuario o contraseña incorrectos"
 
     def logout(self):
-        # cierre de sesion
         if self._current_user:
-            self._action_history.push(f"Cierre de sesion: {self._current_user.username}")
+            self._action_history.push(
+                f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Cierre de sesion: {self._current_user.username}")
             self._current_user = None
 
     def add_user(self, user):
-        # SOLO ADMIN AGREGA NUEVO USUARIOS
-        if not self._validate_admin_permission(): return False, "No tiene permisos"
-        if any(u.username == user.username for u in self._users): return False, "Usuario ya existe"
-        self._users.append(user)
-        self._action_history.push(f"Usuario creado: {user.username}")
-        return True, "Usuario creado exitosamente"
+        if not self._validate_admin_permission():
+            return False, "No tiene permisos"
+        if any(u.username == user.username for u in self._users):
+            return False, "Usuario ya existe"
+
+        if self._save_user_to_db(user):
+            self._users.append(user)
+            self._action_history.push(
+                f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Usuario creado: {user.username}")
+            return True, "Usuario creado exitosamente"
+        else:
+            return False, "Error al guardar en base de datos"
 
     def list_users(self):
-        # Lista todos los usuarios y retorna copia para proteger datos
         return self._users.copy() if self._validate_admin_permission() else []
 
     def delete_user(self, username):
-        # Elimina un usuario del sistema
-        if not self._validate_admin_permission(): return False, "No tiene permisos"
-        if username == self._current_user.username: return False, "No puede eliminarse a sí mismo"
+        if not self._validate_admin_permission():
+            return False, "No tiene permisos"
+        if username == self._current_user.username:
+            return False, "No puede eliminarse a sí mismo"
+
         try:
             conn = sqlite3.connect("tiendaelect.db")
             cursor = conn.cursor()
 
-            # Buscar el usuario para saber su rol
             user_to_delete = None
             for user in self._users:
                 if user.username == username:
@@ -501,7 +532,6 @@ class InventorySystem:
                     break
 
             if user_to_delete:
-                # Eliminar de la tabla correspondiente
                 if user_to_delete.role == "administrador":
                     cursor.execute("DELETE FROM administradores WHERE username = ?", (username,))
                 else:
@@ -510,9 +540,9 @@ class InventorySystem:
                 conn.commit()
                 conn.close()
 
-                # Eliminar de la lista en memoria
                 self._users.remove(user_to_delete)
-                self._action_history.push(f"Usuario eliminado: {username}")
+                self._action_history.push(
+                    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Usuario eliminado: {username}")
                 return True, "Usuario eliminado exitosamente"
             else:
                 return False, "Usuario no encontrado"
@@ -520,18 +550,69 @@ class InventorySystem:
         except Exception as e:
             return False, f"Error al eliminar usuario: {e}"
 
+    def update_user(self, username, **kwargs):
+        if not self._validate_admin_permission():
+            return False, "No tiene permisos"
+
+        user_to_update = None
+        for user in self._users:
+            if user.username == username:
+                user_to_update = user
+                break
+
+        if not user_to_update:
+            return False, "Usuario no encontrado"
+
+        try:
+            if 'full_name' in kwargs:
+                user_to_update.full_name = kwargs['full_name']
+            if 'role' in kwargs:
+                user_to_update._role = kwargs['role']
+            if 'active' in kwargs:
+                user_to_update.active = kwargs['active']
+
+            if self._save_user_to_db(user_to_update):
+                self._action_history.push(
+                    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Usuario actualizado: {username}")
+                return True, "Usuario actualizado exitosamente"
+            else:
+                return False, "Error al actualizar en base de datos"
+
+        except Exception as e:
+            return False, f"Error al actualizar usuario: {e}"
+
+    def change_user_password(self, username, old_password, new_password):
+        """Cambia la contraseña de un usuario"""
+        if not self._validate_admin_permission():
+            return False, "No tiene permisos"
+
+        user_to_update = None
+        for user in self._users:
+            if user.username == username:
+                user_to_update = user
+                break
+
+        if not user_to_update:
+            return False, "Usuario no encontrado"
+
+        if user_to_update.change_password(old_password, new_password):
+            if self._save_user_to_db(user_to_update):
+                self._action_history.push(
+                    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Contraseña cambiada: {username}")
+                return True, "Contraseña cambiada exitosamente"
+            else:
+                return False, "Error al guardar en base de datos"
+        else:
+            return False, "Contraseña actual incorrecta"
+
     def _validate_admin_permission(self):
-        # Valida permisos de administrador
         return self._current_user and self._current_user.role == "administrador"
 
-    # GESTION PRODUCTOS
     def add_product(self, product):
-        # Agrega un producto al inventario
         if any(p.code == product.code for p in self._products):
             return False, "Código ya existe"
 
         try:
-            # Guardar en base de datos
             conn = sqlite3.connect("tiendaelect.db")
             cursor = conn.cursor()
             cursor.execute("""
@@ -542,24 +623,22 @@ class InventorySystem:
             conn.commit()
             conn.close()
 
-            # Agregar a la lista en memoria
             self._products.append(product)
             if self._current_user:
-                self._action_history.push(f"Producto agregado: {product.code}")
+                self._action_history.push(
+                    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Producto agregado: {product.code}")
             return True, "Producto agregado exitosamente"
 
         except Exception as e:
             return False, f"Error al guardar en base de datos: {e}"
 
     def search_product_by_code(self, code):
-        # Busqueda secuencial por codigo
         for product in self._products:
             if product.code == code:
                 return product
         return None
 
     def search_products_sequential(self, key, value):
-        # Busqueda secuencial flexible
         results = []
         for product in self._products:
             try:
@@ -574,10 +653,9 @@ class InventorySystem:
         return results
 
     def list_products(self):
-        return self._products.copy()  # Retorna copia para protección
+        return self._products.copy()
 
     def update_product(self, code, **kwargs):
-        # Actualiza un producto existente
         if not self._validate_admin_permission():
             return False, "No tiene permisos"
 
@@ -586,17 +664,17 @@ class InventorySystem:
             return False, "Producto no encontrado"
 
         try:
-            # Actualizar atributos del producto
             if 'name' in kwargs:
                 product.name = kwargs['name']
             if 'price' in kwargs:
                 product.price = kwargs['price']
             if 'quantity' in kwargs:
                 product.quantity = kwargs['quantity']
+            if 'brand' in kwargs:
+                product._brand = kwargs['brand']
             if 'description' in kwargs:
                 product.description = kwargs['description']
 
-            # Actualizar en la base de datos
             conn = sqlite3.connect("tiendaelect.db")
             cursor = conn.cursor()
             cursor.execute("""
@@ -608,7 +686,7 @@ class InventorySystem:
             conn.commit()
             conn.close()
 
-            self._action_history.push(f"Producto actualizado: {code}")
+            self._action_history.push(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Producto actualizado: {code}")
             return True, "Producto actualizado exitosamente"
 
         except ValueError as e:
@@ -617,23 +695,21 @@ class InventorySystem:
             return False, f"Error al actualizar en base de datos: {e}"
 
     def delete_product(self, code):
-        # Elimina un producto del inventario
         if not self._validate_admin_permission():
             return False, "No tiene permisos"
 
         product = self.search_product_by_code(code)
         if product:
             try:
-                # Eliminar de la base de datos
                 conn = sqlite3.connect("tiendaelect.db")
                 cursor = conn.cursor()
                 cursor.execute("DELETE FROM productos WHERE codigo = ?", (code,))
                 conn.commit()
                 conn.close()
 
-                # Eliminar de la lista en memoria
                 self._products.remove(product)
-                self._action_history.push(f"Producto eliminado: {code}")
+                self._action_history.push(
+                    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Producto eliminado: {code}")
                 return True, "Producto eliminado exitosamente"
 
             except Exception as e:
@@ -641,22 +717,18 @@ class InventorySystem:
         return False, "Producto no encontrado"
 
     def get_products_by_category(self, category):
-        # Obtiene productos por categoría
         return [p for p in self._products if p.category.lower() == category.lower()]
 
-    # ALGORITMOS DE ORDENAMIENTO (QUICKSORT)
     def quick_sort_products(self, products=None, key='name'):
-        # QuickSort recursivo para ordenar productos
         if products is None:
             products = self._products.copy()
 
         if len(products) <= 1:
             return products
-        # Elegir pivote
+
         pivot = products[len(products) // 2]
         pivot_value = getattr(pivot, key)
 
-        # Particion
         left = []
         middle = []
         right = []
@@ -670,23 +742,18 @@ class InventorySystem:
             else:
                 right.append(product)
 
-        # Recursividad
         return self.quick_sort_products(left, key) + middle + self.quick_sort_products(right, key)
 
     def get_products_sorted_by_name(self):
-        # Obtiene productos ordenados por nombre usando QuickSort
         return self.quick_sort_products(key='name')
 
     def get_products_sorted_by_stock(self):
-        # Obtiene productos ordenados por stock usando QuickSort
         return self.quick_sort_products(key='quantity')
 
     def get_products_sorted_by_price(self):
-        # Obtiene productos ordenados por precio usando QuickSort
         return self.quick_sort_products(key='price')
 
     def get_products_sorted_by_category(self):
-        # Obtiene productos ordenados por categoria usando QuickSort
         sorted_products = self.quick_sort_products(key='category')
         if not sorted_products:
             return []
@@ -700,9 +767,7 @@ class InventorySystem:
             result.append(product)
         return result
 
-    # METODOS DE BUSQUEDA BINARIA
     def binary_search_products(self, key, value):
-        # Busqueda binaria para productos ordenados
         sorted_products = self.quick_sort_products(key=key)
 
         low, high = 0, len(sorted_products) - 1
@@ -714,16 +779,13 @@ class InventorySystem:
             current_value = getattr(current_product, key)
 
             if current_value == value:
-                # Encontramos coincidencia, buscar adyacentes
                 results.append(current_product)
 
-                # Buscar hacia izquierda
                 left = mid - 1
                 while left >= 0 and getattr(sorted_products[left], key) == value:
                     results.append(sorted_products[left])
                     left -= 1
 
-                # Buscar hacia derecha
                 right = mid + 1
                 while right < len(sorted_products) and getattr(sorted_products[right], key) == value:
                     results.append(sorted_products[right])
@@ -738,54 +800,107 @@ class InventorySystem:
         return results
 
     def binary_search_by_name(self, name):
-        # Busqueda binaria por nombre
         return self.binary_search_products('name', name)
 
     def binary_search_by_category(self, category):
-        # Busqueda binaria por categoria
         return self.binary_search_products('category', category)
 
     def binary_search_by_price(self, price):
-        # Busqueda binaria por precio exacto
         return self.binary_search_products('price', float(price))
 
-    # METODOS DE BUSQUEDA SECUENCIAL
     def search_products_by_name(self, name):
-        # Busqueda secuencial por nombre
         return self.search_products_sequential('name', name)
 
     def search_products_by_category(self, category):
-        # Busqueda secuencial por categoria
         return self.search_products_sequential('category', category)
 
     def search_products_by_brand(self, brand):
-        # Busqueda secuencial por marca
         return self.search_products_sequential('brand', brand)
 
-    # GESTION VENTAS
-    def create_sale(self, product_codes_quantities):
-        # Crea una nueva venta
-        if not self._current_user: return False, "Debe iniciar sesión"
-        # Validar productos y stock primero
+    def create_sale(self, product_codes_quantities, nit=""):
+        if not self._current_user:
+            return False, "Debe iniciar sesión"
+
+        # Validar NIT si es requerido
+        total_estimated = 0
         for code, quantity in product_codes_quantities:
             product = self.search_product_by_code(code)
-            if not product: return False, f"Producto {code} no encontrado"
-            if product.quantity < quantity: return False, f"Stock insuficiente para {product.name}"
+            if product:
+                total_estimated += product.price * quantity
+
+        if total_estimated > 5000:
+            if not nit:
+                return False, "Para ventas mayores a Q5000 se requiere NIT"
+            if not self._validate_nit(nit):
+                return False, "NIT inválido. Formato: 1234567-8 o 12345678"
+
+        # Validar productos y stock
+        for code, quantity in product_codes_quantities:
+            product = self.search_product_by_code(code)
+            if not product:
+                return False, f"Producto {code} no encontrado"
+            if product.quantity < quantity:
+                return False, f"Stock insuficiente para {product.name}"
+
+        # Agregar tarea pendiente para validación
+        self._pending_tasks.enqueue(f"Validar venta: {len(product_codes_quantities)} productos")
+
         # Procesar venta
         sale_products, total = [], 0
         for code, quantity in product_codes_quantities:
             product = self.search_product_by_code(code)
             product.reduce_stock(quantity)
             subtotal = product.price * quantity
-            sale_products.append(
-                {'code': product.code, 'name': product.name, 'quantity': quantity, 'price': product.price,
-                 'subtotal': subtotal})
+            sale_products.append({
+                'code': product.code,
+                'name': product.name,
+                'quantity': quantity,
+                'price': product.price,
+                'subtotal': subtotal
+            })
             total += subtotal
-        # Crear y registrar venta
-        sale = Sale(self._sale_counter, self._current_user.username, sale_products, total)
+
+        sale = Sale(self._sale_counter, self._current_user.username, sale_products, total, nit)
+
+        try:
+            conn = sqlite3.connect("tiendaelect.db")
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                INSERT INTO ventas (sale_id, username, total, date, nit)
+                VALUES (?, ?, ?, ?, ?)
+            """, (sale.sale_id, sale.username, sale.total, sale.date, sale.nit))
+
+            for product in sale_products:
+                cursor.execute("""
+                    INSERT INTO ventas_detalles (sale_id, product_code, product_name, quantity, price, subtotal)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (sale.sale_id, product['code'], product['name'], product['quantity'],
+                      product['price'], product['subtotal']))
+
+            for code, quantity in product_codes_quantities:
+                cursor.execute("""
+                    UPDATE productos SET cantidad = cantidad - ? 
+                    WHERE codigo = ?
+                """, (quantity, code))
+
+            conn.commit()
+            conn.close()
+
+        except Exception as e:
+            return False, f"Error al guardar venta en base de datos: {e}"
+
         self._sales.append(sale)
         self._sale_counter += 1
-        self._action_history.push(f"Venta registrada: #{sale.sale_id}")
+
+        # Agregar tareas pendientes
+        self._pending_tasks.enqueue(f"Actualizar stock después de venta #{sale.sale_id}")
+        self._pending_tasks.enqueue(f"Generar reporte de venta #{sale.sale_id}")
+
+        self._action_history.push(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Venta registrada: #{sale.sale_id}")
+
+        self._load_products_from_db()
+
         return True, f"Venta registrada exitosamente. Total: Q{total:.2f}"
 
     def list_sales(self):
@@ -794,7 +909,19 @@ class InventorySystem:
     def get_sales_by_user(self, username):
         return [s for s in self._sales if s.username == username]
 
-    # Reportes y Estadisticas
+    def get_pending_tasks(self):
+        """Obtiene las tareas pendientes"""
+        return self._pending_tasks.show_all()
+
+    def process_pending_tasks(self):
+        """Procesa todas las tareas pendientes"""
+        processed = []
+        while not self._pending_tasks.is_empty():
+            task = self._pending_tasks.dequeue()
+            processed.append(task)
+            self._action_history.push(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Tarea procesada: {task}")
+        return processed
+
     def get_total_sales(self):
         return sum(sale.total for sale in self._sales)
 
@@ -802,14 +929,16 @@ class InventorySystem:
         return [p for p in self._products if p.quantity <= threshold]
 
     def get_sales_statistics(self):
-        # Obtiene estadísticas generales de ventas
-        if not self._sales: return {'total_sales': 0, 'total_amount': 0, 'average_sale': 0}
+        if not self._sales:
+            return {'total_sales': 0, 'total_amount': 0, 'average_sale': 0}
         total_amount = self.get_total_sales()
-        return {'total_sales': len(self._sales), 'total_amount': total_amount,
-                'average_sale': total_amount / len(self._sales)}
+        return {
+            'total_sales': len(self._sales),
+            'total_amount': total_amount,
+            'average_sale': total_amount / len(self._sales)
+        }
 
     def get_action_history(self, limit=10):
-        # Obtiene el historial de acciones recientes
         history = self._action_history.show_all()
         return history[-limit:] if len(history) > limit else history
 
@@ -845,15 +974,18 @@ class ElectricalStoreGUI:
     def show_login_screen(self):
         self.clear_window()
 
-        self.logo_imagen = tk.PhotoImage(file="LogoYimsaWeb-1.png")
-        logo_label = tk.Label(self.root, image=self.logo_imagen)
-        logo_label.pack()
+        # Logo (manejo de error si no existe)
+        try:
+            self.logo_imagen = tk.PhotoImage(file="LogoYimsaWeb-1.png")
+            logo_label = tk.Label(self.root, image=self.logo_imagen)
+            logo_label.pack()
+        except:
+            # Si no hay logo, mostrar título
+            title_label = ttk.Label(self.root, text="Materiales Eléctricos Anghie", style='Title.TLabel')
+            title_label.pack(pady=20)
 
         main_frame = ttk.Frame(self.root, padding=20)
         main_frame.pack(expand=True)
-
-        title_label = ttk.Label(main_frame, text="Materiales Electricos Anghie", style='Title.TLabel')
-        title_label.pack(pady=20)
 
         login_frame = ttk.LabelFrame(main_frame, text="Iniciar Sesión", padding=15)
         login_frame.pack(pady=20)
@@ -895,13 +1027,11 @@ class ElectricalStoreGUI:
         header_frame = ttk.Frame(self.root, padding=10)
         header_frame.pack(fill='x')
 
-        ttk.Label(header_frame, text=f"Panel de Administración",
-                  style='Title.TLabel').pack(side='left')
-        ttk.Label(header_frame, text=f"Usuario: {self.system.current_user.full_name}",
-                  style='Subtitle.TLabel').pack(side='right')
+        ttk.Label(header_frame, text=f"Panel de Administración", style='Title.TLabel').pack(side='left')
+        ttk.Label(header_frame, text=f"Usuario: {self.system.current_user.full_name}", style='Subtitle.TLabel').pack(
+            side='right')
 
-        logout_btn = ttk.Button(header_frame, text="Cerrar Sesión",
-                                command=self.logout, style='Menu.TButton')
+        logout_btn = ttk.Button(header_frame, text="Cerrar Sesión", command=self.logout, style='Menu.TButton')
         logout_btn.pack(side='right', padx=10)
 
         notebook = ttk.Notebook(self.root)
@@ -919,13 +1049,11 @@ class ElectricalStoreGUI:
         header_frame = ttk.Frame(self.root, padding=10)
         header_frame.pack(fill='x')
 
-        ttk.Label(header_frame, text=f"Panel de Vendedor",
-                  style='Title.TLabel').pack(side='left')
-        ttk.Label(header_frame, text=f"Usuario: {self.system.current_user.full_name}",
-                  style='Subtitle.TLabel').pack(side='right')
+        ttk.Label(header_frame, text=f"Panel de Vendedor", style='Title.TLabel').pack(side='left')
+        ttk.Label(header_frame, text=f"Usuario: {self.system.current_user.full_name}", style='Subtitle.TLabel').pack(
+            side='right')
 
-        logout_btn = ttk.Button(header_frame, text="Cerrar Sesión",
-                                command=self.logout, style='Menu.TButton')
+        logout_btn = ttk.Button(header_frame, text="Cerrar Sesión", command=self.logout, style='Menu.TButton')
         logout_btn.pack(side='right', padx=10)
 
         notebook = ttk.Notebook(self.root)
@@ -943,21 +1071,18 @@ class ElectricalStoreGUI:
         controls_frame.pack(fill='x', pady=10)
 
         if self.system.current_user.role == "administrador":
-            ttk.Button(controls_frame, text="Agregar Producto",
-                       command=self.show_add_product_dialog).pack(side='left', padx=5)
-            ttk.Button(controls_frame, text="Editar Producto",
-                       command=self.show_edit_product_dialog).pack(side='left', padx=5)
-            ttk.Button(controls_frame, text="Eliminar Producto",
-                       command=self.delete_product).pack(side='left', padx=5)
+            ttk.Button(controls_frame, text="Agregar Producto", command=self.show_add_product_dialog).pack(side='left',
+                                                                                                           padx=5)
+            ttk.Button(controls_frame, text="Editar Producto", command=self.show_edit_product_dialog).pack(side='left',
+                                                                                                           padx=5)
+            ttk.Button(controls_frame, text="Eliminar Producto", command=self.delete_product).pack(side='left', padx=5)
 
-        ttk.Button(controls_frame, text="Ordenar por Nombre",
-                   command=self.sort_by_name).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="Ordenar por Precio",
-                   command=self.sort_by_price).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="Ordenar por Stock",
-                   command=self.sort_by_stock).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="Actualizar",
-                   command=self.refresh_inventory).pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Ordenar por Nombre", command=self.sort_by_name).pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Ordenar por Precio", command=self.sort_by_price).pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Ordenar por Stock", command=self.sort_by_stock).pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Ordenar por Categoría", command=self.sort_by_category).pack(side='left',
+                                                                                                     padx=5)
+        ttk.Button(controls_frame, text="Actualizar", command=self.refresh_inventory).pack(side='left', padx=5)
 
         filter_frame = ttk.Frame(inventory_frame)
         filter_frame.pack(fill='x', pady=5)
@@ -1005,18 +1130,21 @@ class ElectricalStoreGUI:
         controls_frame.pack(fill='x', pady=10)
 
         ttk.Button(controls_frame, text="Agregar Usuario", command=self.show_add_user_dialog).pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Editar Usuario", command=self.show_edit_user_dialog).pack(side='left', padx=5)
         ttk.Button(controls_frame, text="Eliminar Usuario", command=self.delete_user).pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Cambiar Contraseña", command=self.show_change_password_dialog).pack(
+            side='left', padx=5)
         ttk.Button(controls_frame, text="Actualizar", command=self.refresh_users).pack(side='left', padx=5)
 
         tree_frame = ttk.Frame(users_frame)
-        tree_frame.pack(fill='both', expand=True)
+        tree_frame.pack(fill='both', expand=True, pady=10)
 
         columns = ('Usuario', 'Nombre', 'Rol', 'Estado')
         self.users_tree = ttk.Treeview(tree_frame, columns=columns, show='headings', height=15)
 
         for col in columns:
             self.users_tree.heading(col, text=col)
-            self.users_tree.column(col, width=150)
+            self.users_tree.column(col, width=120)
 
         scrollbar = ttk.Scrollbar(tree_frame, orient='vertical', command=self.users_tree.yview)
         self.users_tree.configure(yscrollcommand=scrollbar.set)
@@ -1044,10 +1172,9 @@ class ElectricalStoreGUI:
         self.sale_quantity_entry = ttk.Entry(product_frame, width=10)
         self.sale_quantity_entry.pack(side='left', padx=5)
 
-        ttk.Button(product_frame, text="Buscar Producto",
-                   command=self.search_product_for_sale).pack(side='left', padx=5)
-        ttk.Button(product_frame, text="Agregar al Carrito",
-                   command=self.add_to_cart).pack(side='left', padx=10)
+        ttk.Button(product_frame, text="Buscar Producto", command=self.search_product_for_sale).pack(side='left',
+                                                                                                     padx=5)
+        ttk.Button(product_frame, text="Agregar al Carrito", command=self.add_to_cart).pack(side='left', padx=10)
 
         self.product_info_label = ttk.Label(product_frame, text="", style='Subtitle.TLabel')
         self.product_info_label.pack(side='left', padx=10)
@@ -1071,16 +1198,12 @@ class ElectricalStoreGUI:
         total_frame = ttk.Frame(new_sale_frame)
         total_frame.pack(fill='x', pady=5)
 
-        self.total_label = ttk.Label(total_frame, text="Total: Q0.00",
-                                     style='Title.TLabel')
+        self.total_label = ttk.Label(total_frame, text="Total: Q0.00", style='Title.TLabel')
         self.total_label.pack(side='left')
 
-        ttk.Button(total_frame, text="Procesar Venta",
-                   command=self.process_sale).pack(side='right', padx=5)
-        ttk.Button(total_frame, text="Limpiar Carrito",
-                   command=self.clear_cart).pack(side='right', padx=5)
-        ttk.Button(total_frame, text="Remover Item",
-                   command=self.remove_cart_item).pack(side='right', padx=5)
+        ttk.Button(total_frame, text="Procesar Venta", command=self.process_sale).pack(side='right', padx=5)
+        ttk.Button(total_frame, text="Limpiar Carrito", command=self.clear_cart).pack(side='right', padx=5)
+        ttk.Button(total_frame, text="Remover Item", command=self.remove_cart_item).pack(side='right', padx=5)
 
         history_frame = ttk.LabelFrame(sales_frame, text="Historial de Ventas", padding=10)
         history_frame.pack(fill='both', expand=True, pady=10)
@@ -1091,8 +1214,7 @@ class ElectricalStoreGUI:
         for col in history_columns:
             self.sales_history_tree.heading(col, text=col)
 
-        history_scrollbar = ttk.Scrollbar(history_frame, orient='vertical',
-                                          command=self.sales_history_tree.yview)
+        history_scrollbar = ttk.Scrollbar(history_frame, orient='vertical', command=self.sales_history_tree.yview)
         self.sales_history_tree.configure(yscrollcommand=history_scrollbar.set)
 
         self.sales_history_tree.pack(side='left', fill='both', expand=True)
@@ -1129,12 +1251,16 @@ class ElectricalStoreGUI:
         report_buttons_frame = ttk.Frame(stats_frame)
         report_buttons_frame.pack(fill='x', pady=10)
 
-        ttk.Button(report_buttons_frame, text="Actualizar Estadísticas",
-                   command=self.update_stats).pack(side='left', padx=5)
-        ttk.Button(report_buttons_frame, text="Ver Productos Stock Bajo",
-                   command=self.show_low_stock).pack(side='left', padx=5)
-        ttk.Button(report_buttons_frame, text="Ver Historial de Acciones",
-                   command=self.show_action_history).pack(side='left', padx=5)
+        ttk.Button(report_buttons_frame, text="Actualizar Estadísticas", command=self.update_stats).pack(side='left',
+                                                                                                         padx=5)
+        ttk.Button(report_buttons_frame, text="Ver Productos Stock Bajo", command=self.show_low_stock).pack(side='left',
+                                                                                                            padx=5)
+        ttk.Button(report_buttons_frame, text="Ver Historial de Acciones", command=self.show_action_history).pack(
+            side='left', padx=5)
+        ttk.Button(report_buttons_frame, text="Ver Tareas Pendientes", command=self.show_pending_tasks).pack(
+            side='left', padx=5)
+        ttk.Button(report_buttons_frame, text="Ver Ventas por Usuario", command=self.show_sales_by_user).pack(
+            side='left', padx=5)
 
         category_frame = ttk.LabelFrame(reports_frame, text="Productos por Categoría", padding=10)
         category_frame.pack(fill='both', expand=True, pady=10)
@@ -1146,8 +1272,7 @@ class ElectricalStoreGUI:
             self.category_tree.heading(col, text=col)
             self.category_tree.column(col, width=150)
 
-        scrollbar = ttk.Scrollbar(category_frame, orient='vertical',
-                                  command=self.category_tree.yview)
+        scrollbar = ttk.Scrollbar(category_frame, orient='vertical', command=self.category_tree.yview)
         self.category_tree.configure(yscrollcommand=scrollbar.set)
 
         self.category_tree.pack(side='left', fill='both', expand=True)
@@ -1158,14 +1283,13 @@ class ElectricalStoreGUI:
 
     def setup_search_tab(self, notebook):
         search_frame = ttk.Frame(notebook)
-        notebook.add(search_frame, text="Búsqueda Avanzada")
+        notebook.add(search_frame, text="Búsqueda de Productos")
 
         search_controls = ttk.Frame(search_frame)
         search_controls.pack(fill='x', pady=10)
 
         ttk.Label(search_controls, text="Tipo de Búsqueda:").pack(side='left', padx=5)
-        self.search_type = ttk.Combobox(search_controls,
-                                        values=["Nombre", "Categoría", "Marca", "Código"])
+        self.search_type = ttk.Combobox(search_controls, values=["Nombre", "Categoría", "Marca", "Código", "Precio"])
         self.search_type.pack(side='left', padx=5)
         self.search_type.set("Nombre")
 
@@ -1173,10 +1297,8 @@ class ElectricalStoreGUI:
         self.search_term = ttk.Entry(search_controls, width=30)
         self.search_term.pack(side='left', padx=5)
 
-        ttk.Button(search_controls, text="Búsqueda Secuencial",
-                   command=self.perform_search).pack(side='left', padx=10)
-        ttk.Button(search_controls, text="Búsqueda Binaria",
-                   command=self.perform_binary_search).pack(side='left', padx=5)
+        ttk.Button(search_controls, text="Buscar Coincidencia", command=self.perform_search).pack(side='left', padx=10)
+        ttk.Button(search_controls, text="Buscar Exacto", command=self.perform_binary_search).pack(side='left', padx=5)
 
         tree_frame = ttk.Frame(search_frame)
         tree_frame.pack(fill='both', expand=True)
@@ -1188,37 +1310,23 @@ class ElectricalStoreGUI:
             self.search_results_tree.heading(col, text=col)
             self.search_results_tree.column(col, width=120)
 
-        scrollbar = ttk.Scrollbar(tree_frame, orient='vertical',
-                                  command=self.search_results_tree.yview)
+        scrollbar = ttk.Scrollbar(tree_frame, orient='vertical', command=self.search_results_tree.yview)
         self.search_results_tree.configure(yscrollcommand=scrollbar.set)
 
         self.search_results_tree.pack(side='left', fill='both', expand=True)
         scrollbar.pack(side='right', fill='y')
 
-    ############### MÉTODOS DE FUNCIONALIDAD #################
+    # MÉTODOS DE FUNCIONALIDAD COMPLETOS
     def refresh_inventory(self):
-        # Esto limpia la tabla
         for item in self.inventory_tree.get_children():
             self.inventory_tree.delete(item)
 
-        try:
-            # Recargar productos desde el sistema (que ahora carga de la BD)
-            products = self.system.list_products()
-
-            # Insertar los productos en el treeview
-            for product in products:
-                self.inventory_tree.insert('', 'end', values=(
-                    product.code, product.name, product.category,
-                    f"Q{product.price:.2f}", product.quantity, product.brand
-                ))
-
-        except Exception as e:
-            from tkinter import messagebox
-            messagebox.showerror("Error", f"No se pudieron cargar los productos: {e}")
-
-        except Exception as e:
-            import tkinter.messagebox as messagebox
-            messagebox.showerror("Error", f"No se pudieron cargar los productos: {e}")
+        products = self.system.list_products()
+        for product in products:
+            self.inventory_tree.insert('', 'end', values=(
+                product.code, product.name, product.category,
+                f"Q{product.price:.2f}", product.quantity, product.brand
+            ))
 
     def sort_by_name(self):
         for item in self.inventory_tree.get_children():
@@ -1253,6 +1361,22 @@ class ElectricalStoreGUI:
                 f"Q{product.price:.2f}", product.quantity, product.brand
             ))
 
+    def sort_by_category(self):
+        for item in self.inventory_tree.get_children():
+            self.inventory_tree.delete(item)
+
+        products = self.system.get_products_sorted_by_category()
+        for item in products:
+            if isinstance(item, str):
+                # Es un separador de categoría
+                self.inventory_tree.insert('', 'end', values=(item, "", "", "", "", ""))
+            else:
+                # Es un producto
+                self.inventory_tree.insert('', 'end', values=(
+                    item.code, item.name, item.category,
+                    f"Q{item.price:.2f}", item.quantity, item.brand
+                ))
+
     def load_categories(self):
         products = self.system.list_products()
         categories = sorted(set(product.category for product in products))
@@ -1283,14 +1407,13 @@ class ElectricalStoreGUI:
                 f"Q{product.price:.2f}", product.quantity, product.brand
             ))
 
-    def show_add_product_dialog(self):  # arreglado
+    def show_add_product_dialog(self):
         dialog = tk.Toplevel(self.root)
         dialog.title("Agregar Producto")
         dialog.geometry("400x500")
         dialog.transient(self.root)
         dialog.grab_set()
 
-        # Campos
         fields = [
             ("Código:", "code"),
             ("Nombre:", "name"),
@@ -1301,79 +1424,52 @@ class ElectricalStoreGUI:
             ("Descripción:", "description")
         ]
 
-        # Guardar las entradas en un diccionario
         entries = {}
-
         for i, (label, key) in enumerate(fields):
             ttk.Label(dialog, text=label).grid(row=i, column=0, padx=5, pady=5, sticky='e')
             entry = ttk.Entry(dialog, width=30)
             entry.grid(row=i, column=1, padx=5, pady=5, sticky='w')
             entries[key] = entry
 
-            # Función para guardar el producto
-            def save_product():
+        def save_product():
+            try:
+                code = entries['code'].get().strip().upper()
+                name = entries['name'].get().strip()
+                category = entries['category'].get().strip()
+                price_str = entries['price'].get().strip()
+                quantity_str = entries['quantity'].get().strip()
+                brand = entries['brand'].get().strip()
+                description = entries['description'].get().strip()
+
+                # Validaciones
+                if not all([code, name, category, price_str, quantity_str]):
+                    messagebox.showwarning("Advertencia", "Debe llenar todos los campos obligatorios")
+                    return
+
                 try:
-                    # Leer datos del formulario
-                    codigo = entries['code'].get().strip().upper()
-                    nombre = entries['name'].get().strip()
-                    categoria = entries['category'].get().strip()
-                    precio = entries['price'].get().strip()
-                    cantidad = entries['quantity'].get().strip()
-                    marca = entries['brand'].get().strip()
-                    descripcion = entries['description'].get().strip()
+                    price = float(price_str)
+                    quantity = int(quantity_str)
+                    if price < 0 or quantity < 0:
+                        raise ValueError("Los valores no pueden ser negativos")
+                except ValueError:
+                    messagebox.showerror("Error", "Precio y cantidad deben ser números válidos y positivos")
+                    return
 
-                    # Validar campos requeridos
-                    if not all([codigo, nombre, categoria, precio, cantidad]):
-                        messagebox.showwarning("Advertencia", "Debe llenar todos los campos obligatorios.")
-                        return
+                product = Product(code, name, category, price, quantity, brand, description)
+                success, message = self.system.add_product(product)
 
-                    # Validar tipos de datos numéricos
-                    try:
-                        precio = float(precio)
-                        cantidad = int(cantidad)
-                    except ValueError:
-                        messagebox.showerror("Error", "Precio o cantidad inválidos.")
-                        return
-
-                    # Conectar a la base de datos
-                    conn = sqlite3.connect("tiendaelect.db")
-                    cursor = conn.cursor()
-
-                    # Crear tabla si no existe
-                    cursor.execute("""
-                        CREATE TABLE IF NOT EXISTS productos (
-                            codigo TEXT PRIMARY KEY,
-                            nombre TEXT,
-                            categoria TEXT,
-                            precio REAL,
-                            cantidad INTEGER,
-                            marca TEXT,
-                            descripcion TEXT
-                        )
-                    """)
-
-                    # Insertar el nuevo producto
-                    cursor.execute("""
-                        INSERT INTO productos (codigo, nombre, categoria, precio, cantidad, marca, descripcion)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """, (codigo, nombre, categoria, precio, cantidad, marca, descripcion))
-
-                    conn.commit()
-                    conn.close()
-
-                    # Confirmar y cerrar
-                    messagebox.showinfo("Éxito", f"Producto '{nombre}' guardado correctamente en la base de datos.")
+                if success:
+                    messagebox.showinfo("Éxito", message)
+                    self.refresh_inventory()
+                    self.load_categories()
                     dialog.destroy()
+                else:
+                    messagebox.showerror("Error", message)
 
-                except sqlite3.IntegrityError:
-                    messagebox.showerror("Error", f"Ya existe un producto con el código.")
-                except Exception as e:
-                    messagebox.showerror("Error", f"Ocurrió un error: {e}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al guardar producto: {str(e)}")
 
-            ttk.Button(dialog, text="Guardar", command=save_product).grid(row=len(fields), column=1, pady=10)
-
-    def run(self):
-        self.root.mainloop()
+        ttk.Button(dialog, text="Guardar", command=save_product).grid(row=len(fields), column=1, pady=10)
 
     def show_edit_product_dialog(self):
         selected = self.inventory_tree.selection()
@@ -1426,6 +1522,8 @@ class ElectricalStoreGUI:
                     updates['price'] = float(entries['price'].get())
                 if entries['quantity'].get():
                     updates['quantity'] = int(entries['quantity'].get())
+                if entries['brand'].get():
+                    updates['brand'] = entries['brand'].get()
                 updates['description'] = entries['description'].get()
 
                 success, message = self.system.update_product(code, **updates)
@@ -1460,15 +1558,16 @@ class ElectricalStoreGUI:
                 messagebox.showerror("Error", message)
 
     def refresh_users(self):
-        for item in self.users_tree.get_children():
-            self.users_tree.delete(item)
+        if hasattr(self, 'users_tree'):
+            for item in self.users_tree.get_children():
+                self.users_tree.delete(item)
 
-        users = self.system.list_users()
-        for user in users:
-            status = "Activo" if user.active else "Inactivo"
-            self.users_tree.insert('', 'end', values=(
-                user.username, user.full_name, user.role, status
-            ))
+            users = self.system.list_users()
+            for user in users:
+                status = "Activo" if user.active else "Inactivo"
+                self.users_tree.insert('', 'end', values=(
+                    user.username, user.full_name, user.role, status
+                ))
 
     def show_add_user_dialog(self):
         dialog = tk.Toplevel(self.root)
@@ -1503,9 +1602,9 @@ class ElectricalStoreGUI:
 
         def save_user():
             try:
-                username = entries['username'].get()
+                username = entries['username'].get().strip()
                 password = entries['password'].get()
-                full_name = entries['full_name'].get()
+                full_name = entries['full_name'].get().strip()
                 role = entries['role'].get()
 
                 if not all([username, password, full_name, role]):
@@ -1514,6 +1613,85 @@ class ElectricalStoreGUI:
 
                 user = User(username, password, role, full_name)
                 success, message = self.system.add_user(user)
+
+                if success:
+                    messagebox.showinfo("Éxito", message)
+                    self.refresh_users()
+                    dialog.destroy()
+                else:
+                    messagebox.showerror("Error", message)
+
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al crear usuario: {str(e)}")
+
+        ttk.Button(dialog, text="Guardar", command=save_user).grid(row=len(fields), column=1, pady=10)
+
+    def show_edit_user_dialog(self):
+        selected = self.users_tree.selection()
+        if not selected:
+            messagebox.showwarning("Advertencia", "Seleccione un usuario para editar")
+            return
+
+        item = self.users_tree.item(selected[0])
+        username = item['values'][0]
+
+        user_to_edit = None
+        for user in self.system.list_users():
+            if user.username == username:
+                user_to_edit = user
+                break
+
+        if not user_to_edit:
+            messagebox.showerror("Error", "Usuario no encontrado")
+            return
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Editar Usuario")
+        dialog.geometry("400x300")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        fields = [
+            ("Usuario:", "username", user_to_edit.username, True),
+            ("Nombre Completo:", "full_name", user_to_edit.full_name, False),
+            ("Rol:", "role", user_to_edit.role, False),
+            ("Activo:", "active", user_to_edit.active, False)
+        ]
+
+        entries = {}
+        for i, (label, key, value, disabled) in enumerate(fields):
+            ttk.Label(dialog, text=label).grid(row=i, column=0, padx=5, pady=5, sticky='e')
+
+            if key == "role":
+                role_combo = ttk.Combobox(dialog, values=["administrador", "dependiente"], width=27)
+                role_combo.set(value)
+                if disabled:
+                    role_combo.config(state='disabled')
+                role_combo.grid(row=i, column=1, padx=5, pady=5, sticky='w')
+                entries[key] = role_combo
+            elif key == "active":
+                active_var = tk.BooleanVar(value=value)
+                active_check = ttk.Checkbutton(dialog, variable=active_var)
+                active_check.grid(row=i, column=1, padx=5, pady=5, sticky='w')
+                entries[key] = active_var
+            else:
+                entry = ttk.Entry(dialog, width=30)
+                entry.insert(0, value)
+                if disabled:
+                    entry.config(state='disabled')
+                entry.grid(row=i, column=1, padx=5, pady=5, sticky='w')
+                entries[key] = entry
+
+        def update_user():
+            try:
+                updates = {}
+                if entries['full_name'].get():
+                    updates['full_name'] = entries['full_name'].get()
+                if entries['role'].get():
+                    updates['role'] = entries['role'].get()
+                updates['active'] = entries['active'].get()
+
+                success, message = self.system.update_user(username, **updates)
                 if success:
                     messagebox.showinfo("Éxito", message)
                     self.refresh_users()
@@ -1521,9 +1699,51 @@ class ElectricalStoreGUI:
                 else:
                     messagebox.showerror("Error", message)
             except Exception as e:
-                messagebox.showerror("Error", f"Error al crear usuario: {str(e)}")
+                messagebox.showerror("Error", f"Error al actualizar usuario: {str(e)}")
 
-        ttk.Button(dialog, text="Guardar", command=save_user).grid(row=len(fields), column=1, pady=10)
+        ttk.Button(dialog, text="Actualizar", command=update_user).grid(row=len(fields), column=1, pady=10)
+
+    def show_change_password_dialog(self):
+        selected = self.users_tree.selection()
+        if not selected:
+            messagebox.showwarning("Advertencia", "Seleccione un usuario para cambiar contraseña")
+            return
+
+        item = self.users_tree.item(selected[0])
+        username = item['values'][0]
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Cambiar Contraseña")
+        dialog.geometry("300x200")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        ttk.Label(dialog, text=f"Cambiar contraseña de {username}").pack(pady=10)
+
+        ttk.Label(dialog, text="Contraseña actual:").pack(pady=5)
+        old_password_entry = ttk.Entry(dialog, width=25, show="*")
+        old_password_entry.pack(pady=5)
+
+        ttk.Label(dialog, text="Nueva contraseña:").pack(pady=5)
+        new_password_entry = ttk.Entry(dialog, width=25, show="*")
+        new_password_entry.pack(pady=5)
+
+        def change_password():
+            old_password = old_password_entry.get()
+            new_password = new_password_entry.get()
+
+            if not old_password or not new_password:
+                messagebox.showerror("Error", "Ambas contraseñas son requeridas")
+                return
+
+            success, message = self.system.change_user_password(username, old_password, new_password)
+            if success:
+                messagebox.showinfo("Éxito", message)
+                dialog.destroy()
+            else:
+                messagebox.showerror("Error", message)
+
+        ttk.Button(dialog, text="Cambiar Contraseña", command=change_password).pack(pady=15)
 
     def delete_user(self):
         selected = self.users_tree.selection()
@@ -1639,7 +1859,7 @@ class ElectricalStoreGUI:
 
         nit = ""
         if self.current_cart_total > 5000:
-            nit = tk.simpledialog.askstring("NIT", "Para ventas mayores a Q5000 ingrese NIT:")
+            nit = simpledialog.askstring("NIT", "Para ventas mayores a Q5000 ingrese NIT (formato: 1234567-8):")
             if not nit:
                 messagebox.showwarning("Advertencia", "Se requiere NIT para ventas mayores a Q5000")
                 return
@@ -1722,8 +1942,7 @@ class ElectricalStoreGUI:
         dialog.grab_set()
 
         if not low_stock:
-            ttk.Label(dialog, text="No hay productos con stock bajo",
-                      style='Subtitle.TLabel').pack(pady=20)
+            ttk.Label(dialog, text="No hay productos con stock bajo", style='Subtitle.TLabel').pack(pady=20)
             return
 
         columns = ('Código', 'Nombre', 'Categoría', 'Stock Actual', 'Precio')
@@ -1759,8 +1978,7 @@ class ElectricalStoreGUI:
         dialog.grab_set()
 
         if not history:
-            ttk.Label(dialog, text="No hay acciones en el historial",
-                      style='Subtitle.TLabel').pack(pady=20)
+            ttk.Label(dialog, text="No hay acciones en el historial", style='Subtitle.TLabel').pack(pady=20)
             return
 
         columns = ('#', 'Acción', 'Timestamp')
@@ -1786,6 +2004,81 @@ class ElectricalStoreGUI:
                 i,
                 action_text,
                 timestamp
+            ))
+
+        tree.pack(side='left', fill='both', expand=True, padx=10, pady=10)
+        scrollbar.pack(side='right', fill='y', pady=10)
+
+    def show_pending_tasks(self):
+        tasks = self.system.get_pending_tasks()
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Tareas Pendientes")
+        dialog.geometry("600x300")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        if not tasks:
+            ttk.Label(dialog, text="No hay tareas pendientes", style='Subtitle.TLabel').pack(pady=20)
+            return
+
+        columns = ('#', 'Tarea')
+        tree = ttk.Treeview(dialog, columns=columns, show='headings', height=10)
+
+        for col in columns:
+            tree.heading(col, text=col)
+            tree.column(col, width=250)
+
+        scrollbar = ttk.Scrollbar(dialog, orient='vertical', command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+
+        for i, task in enumerate(tasks, 1):
+            tree.insert('', 'end', values=(i, task))
+
+        tree.pack(side='left', fill='both', expand=True, padx=10, pady=10)
+        scrollbar.pack(side='right', fill='y', pady=10)
+
+        def process_tasks():
+            processed = self.system.process_pending_tasks()
+            messagebox.showinfo("Éxito", f"Tareas procesadas: {len(processed)}")
+            dialog.destroy()
+
+        ttk.Button(dialog, text="Procesar Tareas", command=process_tasks).pack(pady=10)
+
+    def show_sales_by_user(self):
+        """Muestra ventas agrupadas por usuario"""
+        users = self.system.list_users()
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Ventas por Usuario")
+        dialog.geometry("700x500")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        if not users:
+            ttk.Label(dialog, text="No hay usuarios registrados", style='Subtitle.TLabel').pack(pady=20)
+            return
+
+        columns = ('Usuario', 'Nombre', 'Total Ventas', 'Monto Total')
+        tree = ttk.Treeview(dialog, columns=columns, show='headings', height=15)
+
+        for col in columns:
+            tree.heading(col, text=col)
+            tree.column(col, width=150)
+
+        scrollbar = ttk.Scrollbar(dialog, orient='vertical', command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+
+        for user in users:
+            user_sales = self.system.get_sales_by_user(user.username)
+            total_sales = len(user_sales)
+            total_amount = sum(sale.total for sale in user_sales)
+
+            tree.insert('', 'end', values=(
+                user.username,
+                user.full_name,
+                total_sales,
+                f"Q{total_amount:.2f}"
             ))
 
         tree.pack(side='left', fill='both', expand=True, padx=10, pady=10)
@@ -1841,16 +2134,9 @@ class ElectricalStoreGUI:
             self.search_results_tree.delete(item)
 
         if results:
-            for product in results:
-                self.search_results_tree.insert('', 'end', values=(
-                    product.code, product.name, product.category,
-                    f"Q{product.price:.2f}", product.quantity, product.brand
-                ))
-            messagebox.showinfo("Búsqueda",
-                                f"{search_method}\nEncontrados: {len(results)} productos")
+            messagebox.showinfo("Resultados", f"Se encontraron {len(results)} productos")
         else:
-            messagebox.showinfo("Búsqueda",
-                                f"{search_method}\nNo se encontraron productos")
+            messagebox.showinfo("Resultados", "No se encontraron productos")
 
     def logout(self):
         self.system.logout()
