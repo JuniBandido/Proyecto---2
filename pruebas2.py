@@ -976,7 +976,7 @@ class ElectricalStoreGUI:
         style.configure('Title.TLabel', font=('Arial', 16, 'bold'), background="#f0f0f0")
         style.configure('Subtitle.TLabel', font=('Arial', 12, 'bold'), background='#f0f0f0')
         style.configure('Action.TButton', font=('Arial', 10), padding=10)
-        style.configure('Menu.TButton', font=('Arial', 9), padding=8)
+        style.configure('Menu.TButton', font=('Arial', 9), padding=10)
         style.configure('Success.TLabel', font=('Arial', 10), foreground='green', background='gray49')
         style.configure('Warning.TLabel', font=('Arial', 10), foreground='orange', background='gray49')
         style.configure('Danger.TLabel', font=('Arial', 10), foreground='red', background='gray49')
@@ -1015,9 +1015,11 @@ class ElectricalStoreGUI:
         login_btn = ttk.Button(login_frame, text="Ingresar", command=self.login, style='Action.TButton')
         login_btn.grid(row=2, column=0, columnspan=2, pady=15)
 
+        """""
         test_frame = ttk.Frame(main_frame)
         test_frame.pack(pady=10)
         ttk.Label(test_frame, text="Usuarios prueba: admin/admin123  o  vendedor/vend123", font=('Arial', 9)).pack()
+        """""
 
         local_label = tk.Label(text="Oficina: Lotificación San Francisco, Las Pozas. Morales Izabal. Guatemala", bg='gray49')
         local_label.pack(pady=10, padx=10, anchor="w")
@@ -1094,18 +1096,18 @@ class ElectricalStoreGUI:
         controls_frame.pack(fill='x', pady=10)
 
         if self.system.current_user.role == "administrador":
-            ttk.Button(controls_frame, text="Agregar Producto", command=self.show_add_product_dialog).pack(side='left',
+            ttk.Button(controls_frame, text="Agregar Producto", command=self.show_add_product_dialog, style='Action.TButton').pack(side='left',
                                                                                                            padx=5)
-            ttk.Button(controls_frame, text="Editar Producto", command=self.show_edit_product_dialog).pack(side='left',
+            ttk.Button(controls_frame, text="Editar Producto", command=self.show_edit_product_dialog, style='Action.TButton').pack(side='left',
                                                                                                            padx=5)
-            ttk.Button(controls_frame, text="Eliminar Producto", command=self.delete_product).pack(side='left', padx=5)
+            ttk.Button(controls_frame, text="Eliminar Producto", command=self.delete_product, style='Action.TButton').pack(side='left', padx=5)
 
-        ttk.Button(controls_frame, text="Ordenar por Nombre", command=self.sort_by_name).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="Ordenar por Precio", command=self.sort_by_price).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="Ordenar por Stock", command=self.sort_by_stock).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="Ordenar por Categoría", command=self.sort_by_category).pack(side='left',
+        ttk.Button(controls_frame, text="Ordenar por Nombre", command=self.sort_by_name, style='Action.TButton').pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Ordenar por Precio", command=self.sort_by_price, style='Action.TButton').pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Ordenar por Stock", command=self.sort_by_stock, style='Action.TButton').pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Ordenar por Categoría", command=self.sort_by_category, style='Action.TButton').pack(side='left',
                                                                                                      padx=5)
-        ttk.Button(controls_frame, text="Actualizar", command=self.refresh_inventory).pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Actualizar", command=self.refresh_inventory, style='Action.TButton').pack(side='left', padx=5)
 
         filter_frame = ttk.Frame(inventory_frame)
         filter_frame.pack(fill='x', pady=5)
@@ -1152,12 +1154,12 @@ class ElectricalStoreGUI:
         controls_frame = ttk.Frame(users_frame)
         controls_frame.pack(fill='x', pady=10)
 
-        ttk.Button(controls_frame, text="Agregar Usuario", command=self.show_add_user_dialog).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="Editar Usuario", command=self.show_edit_user_dialog).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="Eliminar Usuario", command=self.delete_user).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="Cambiar Contraseña", command=self.show_change_password_dialog).pack(
+        ttk.Button(controls_frame, text="Agregar Usuario", command=self.show_add_user_dialog, style='Action.TButton').pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Editar Usuario", command=self.show_edit_user_dialog, style='Action.TButton').pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Eliminar Usuario", command=self.delete_user, style='Action.TButton').pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Cambiar Contraseña", command=self.show_change_password_dialog, style='Action.TButton').pack(
             side='left', padx=5)
-        ttk.Button(controls_frame, text="Actualizar", command=self.refresh_users).pack(side='left', padx=5)
+        ttk.Button(controls_frame, text="Actualizar", command=self.refresh_users, style='Action.TButton').pack(side='left', padx=5)
 
         tree_frame = ttk.Frame(users_frame)
         tree_frame.pack(fill='both', expand=True, pady=10)
@@ -1195,9 +1197,9 @@ class ElectricalStoreGUI:
         self.sale_quantity_entry = ttk.Entry(product_frame, width=10)
         self.sale_quantity_entry.pack(side='left', padx=5)
 
-        ttk.Button(product_frame, text="Buscar Producto", command=self.search_product_for_sale).pack(side='left',
+        ttk.Button(product_frame, text="Buscar Producto", command=self.search_product_for_sale, style='Action.TButton').pack(side='left',
                                                                                                      padx=5)
-        ttk.Button(product_frame, text="Agregar al Carrito", command=self.add_to_cart).pack(side='left', padx=10)
+        ttk.Button(product_frame, text="Agregar al Carrito", command=self.add_to_cart, style='Action.TButton').pack(side='left', padx=10)
 
         self.product_info_label = ttk.Label(product_frame, text="", style='Subtitle.TLabel')
         self.product_info_label.pack(side='left', padx=10)
@@ -1224,9 +1226,9 @@ class ElectricalStoreGUI:
         self.total_label = ttk.Label(total_frame, text="Total: Q0.00", style='Title.TLabel')
         self.total_label.pack(side='left')
 
-        ttk.Button(total_frame, text="Procesar Venta", command=self.process_sale).pack(side='right', padx=5)
-        ttk.Button(total_frame, text="Limpiar Carrito", command=self.clear_cart).pack(side='right', padx=5)
-        ttk.Button(total_frame, text="Remover Item", command=self.remove_cart_item).pack(side='right', padx=5)
+        ttk.Button(total_frame, text="Procesar Venta", command=self.process_sale, style='Action.TButton').pack(side='right', padx=5)
+        ttk.Button(total_frame, text="Limpiar Carrito", command=self.clear_cart, style='Action.TButton').pack(side='right', padx=5)
+        ttk.Button(total_frame, text="Remover Item", command=self.remove_cart_item, style='Action.TButton').pack(side='right', padx=5)
 
         history_frame = ttk.LabelFrame(sales_frame, text="Historial de Ventas", padding=10)
         history_frame.pack(fill='both', expand=True, pady=10)
@@ -1274,15 +1276,15 @@ class ElectricalStoreGUI:
         report_buttons_frame = ttk.Frame(stats_frame)
         report_buttons_frame.pack(fill='x', pady=10)
 
-        ttk.Button(report_buttons_frame, text="Actualizar Estadísticas", command=self.update_stats).pack(side='left',
+        ttk.Button(report_buttons_frame, text="Actualizar Estadísticas", command=self.update_stats, style='Action.TButton').pack(side='left',
                                                                                                          padx=5)
-        ttk.Button(report_buttons_frame, text="Ver Productos Stock Bajo", command=self.show_low_stock).pack(side='left',
+        ttk.Button(report_buttons_frame, text="Ver Productos Stock Bajo", command=self.show_low_stock, style='Action.TButton').pack(side='left',
                                                                                                             padx=5)
-        ttk.Button(report_buttons_frame, text="Ver Historial de Acciones", command=self.show_action_history).pack(
+        ttk.Button(report_buttons_frame, text="Ver Historial de Acciones", command=self.show_action_history, style='Action.TButton').pack(
             side='left', padx=5)
-        ttk.Button(report_buttons_frame, text="Ver Tareas Pendientes", command=self.show_pending_tasks).pack(
+        ttk.Button(report_buttons_frame, text="Ver Tareas Pendientes", command=self.show_pending_tasks, style='Action.TButton').pack(
             side='left', padx=5)
-        ttk.Button(report_buttons_frame, text="Ver Ventas por Usuario", command=self.show_sales_by_user).pack(
+        ttk.Button(report_buttons_frame, text="Ver Ventas por Usuario", command=self.show_sales_by_user, style='Action.TButton').pack(
             side='left', padx=5)
 
         category_frame = ttk.LabelFrame(reports_frame, text="Productos por Categoría", padding=10)
@@ -1320,8 +1322,8 @@ class ElectricalStoreGUI:
         self.search_term = ttk.Entry(search_controls, width=30)
         self.search_term.pack(side='left', padx=5)
 
-        ttk.Button(search_controls, text="Buscar Coincidencia", command=self.perform_search).pack(side='left', padx=10)
-        ttk.Button(search_controls, text="Buscar Exacto", command=self.perform_binary_search).pack(side='left', padx=5)
+        ttk.Button(search_controls, text="Buscar Coincidencia", command=self.perform_search, style='Action.TButton').pack(side='left', padx=10)
+        ttk.Button(search_controls, text="Buscar Exacto", command=self.perform_binary_search, style='Action.TButton').pack(side='left', padx=5)
 
         tree_frame = ttk.Frame(search_frame)
         tree_frame.pack(fill='both', expand=True)
@@ -1737,7 +1739,7 @@ class ElectricalStoreGUI:
 
         dialog = tk.Toplevel(self.root)
         dialog.title("Cambiar Contraseña")
-        dialog.geometry("300x200")
+        dialog.geometry("300x300")
         dialog.transient(self.root)
         dialog.grab_set()
 
@@ -2070,7 +2072,7 @@ class ElectricalStoreGUI:
             ttk.Label(dialog, text="No hay acciones en el historial", style='Subtitle.TLabel').pack(pady=20)
             return
 
-        columns = ('#', 'Acción', 'Timestamp')
+        columns = ('#', 'Acción', 'Fecha y hora')
         tree = ttk.Treeview(dialog, columns=columns, show='headings', height=15)
 
         for col in columns:
