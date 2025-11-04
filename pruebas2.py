@@ -5,8 +5,8 @@
 from collections import deque
 from datetime import datetime
 import tkinter as tk
-from tkinter import ttk, messagebox
-import sqlite3
+from tkinter import ttk, messagebox #PAra errores
+import sqlite3 #base de datos
 import tkinter.simpledialog as simpledialog
 import re  # Para validación de NIT
 
@@ -2224,6 +2224,31 @@ class ElectricalStoreGUI:
 
         if results:
             messagebox.showinfo("Resultados", f"Se encontraron {len(results)} productos")
+            dialog = tk.Toplevel(self.root)
+            dialog.title("Búsqueda de producto")
+            dialog.geometry("900x500")
+            dialog.transient(self.root)
+            dialog.grab_set()
+
+            frame = ttk.Frame(dialog, padding=10)
+            frame.pack(fill="both", expand=True)
+
+            columns = ("Código", "Nombre", "Precio", "Stock", "Marca")
+            tree = ttk.Treeview(frame, columns=columns, show="headings", selectmode="browse")
+            for col in columns:
+                tree.heading(col, text=col)
+                tree.column(col, width=100)
+            tree.pack(fill="both", expand=True)
+
+            scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+            tree.configure(yscrollcommand=scrollbar.set)
+            scrollbar.pack(side="right", fill="y")
+
+            # Insertar productos
+            for product in results:
+                tree.insert("", "end", values=(
+                    product.code, product.name, f"Q{product.price:.2f}", product.quantity, product.brand
+                ))
         else:
             messagebox.showinfo("Resultados", "No se encontraron productos")
 
@@ -2235,11 +2260,6 @@ class ElectricalStoreGUI:
         self.root.mainloop()
 
 
-def run_system():
-    system = InventorySystem()
-    app = ElectricalStoreGUI(system)
-    app.run()
-
-
-if __name__ == "__main__":
-    run_system()
+system = InventorySystem()
+app = ElectricalStoreGUI(system)
+app.run()
