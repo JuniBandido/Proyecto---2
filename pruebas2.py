@@ -1435,6 +1435,8 @@ class ElectricalStoreGUI:
             ))
 
     def show_add_product_dialog(self):
+        self.root.attributes('-alpha', 0.5)
+
         dialog = tk.Toplevel(self.root)
         dialog.title("Agregar Producto")
         dialog.geometry("400x500")
@@ -1496,7 +1498,14 @@ class ElectricalStoreGUI:
             except Exception as e:
                 messagebox.showerror("Error", f"Error al guardar producto: {str(e)}")
 
-        ttk.Button(dialog, text="Guardar", command=save_product).grid(row=len(fields), column=1, pady=10)
+        def on_close():
+            self.root.attributes('-alpha', 1.0)
+            dialog.destroy()
+
+        # Si el usuario cierra con la "X"
+        dialog.protocol("WM_DELETE_WINDOW", on_close)
+
+        ttk.Button(dialog, text="Guardar", command=lambda: (save_product(), on_close())).grid(row=len(fields), column=1, pady=10)
 
     def show_edit_product_dialog(self):
         selected = self.inventory_tree.selection()
