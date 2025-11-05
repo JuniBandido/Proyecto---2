@@ -923,18 +923,18 @@ class InventorySystem:
     def get_sales_by_user(self, username):
         return [s for s in self._sales if s.username == username]
 
+    """""
     def get_pending_tasks(self):
-        """Obtiene las tareas pendientes"""
         return self._pending_tasks.show_all()
 
     def process_pending_tasks(self):
-        """Procesa todas las tareas pendientes"""
         processed = []
         while not self._pending_tasks.is_empty():
             task = self._pending_tasks.dequeue()
             processed.append(task)
             self._action_history.push(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Tarea procesada: {task}")
         return processed
+    """""
 
     def get_total_sales(self):
         return sum(sale.total for sale in self._sales)
@@ -1282,8 +1282,10 @@ class ElectricalStoreGUI:
                                                                                                             padx=5)
         ttk.Button(report_buttons_frame, text="Ver Historial de Acciones", command=self.show_action_history, style='Action.TButton').pack(
             side='left', padx=5)
+        """""
         ttk.Button(report_buttons_frame, text="Ver Tareas Pendientes", command=self.show_pending_tasks, style='Action.TButton').pack(
             side='left', padx=5)
+            """""
         ttk.Button(report_buttons_frame, text="Ver Ventas por Usuario", command=self.show_sales_by_user, style='Action.TButton').pack(
             side='left', padx=5)
 
@@ -1931,15 +1933,25 @@ class ElectricalStoreGUI:
 
         item_index = self.cart_tree.index(selected[0])
         if 0 <= item_index < len(self.cart_items):
-            self.cart_items.pop(item_index)
-            self.update_cart_display()
+            if messagebox.askyesno("Confirmar", f"¿Está seguro de eliminar el producto del carrito?"):
+                success = self.cart_items.pop(item_index)
+                if success:
+                    self.update_cart_display()
+                    print("se elimina del carrito")
+                else:
+                    messagebox.showerror("Error")
 
     def clear_cart(self):
-        self.cart_items = []
-        self.update_cart_display()
-        self.sale_code_entry.delete(0, tk.END)
-        self.sale_quantity_entry.delete(0, tk.END)
-        self.product_info_label.config(text="")
+        if messagebox.askyesno("Confirmar", f"¿Está seguro de limpiar el carrito?"):
+            success = self.cart_items
+            if success:
+                self.cart_items = []
+                self.update_cart_display()
+                self.sale_code_entry.delete(0, tk.END)
+                self.sale_quantity_entry.delete(0, tk.END)
+                self.product_info_label.config(text="")
+            else:
+                messagebox.showerror("Error")
 
     def process_sale(self):
         if not self.cart_items:
@@ -1957,13 +1969,19 @@ class ElectricalStoreGUI:
 
         success, message = self.system.create_sale(sale_items, nit)
         if success:
+            if messagebox.askyesno("Confirmar", f"¿Está seguro de procesar la venta?"):
+                if success:
+                    self.cart_items = []
+                    self.update_cart_display()
+                    self.sale_code_entry.delete(0, tk.END)
+                    self.sale_quantity_entry.delete(0, tk.END)
+                    self.product_info_label.config(text="")
+                    self.refresh_inventory()
+                    self.refresh_sales_history()
+                    self.update_stats()
+                else:
+                    messagebox.showerror("Error")
             messagebox.showinfo("Éxito", message)
-            self.clear_cart()
-            self.refresh_inventory()
-            self.refresh_sales_history()
-            self.update_stats()
-        else:
-            messagebox.showerror("Error", message)
 
     def refresh_sales_history(self):
         for item in self.sales_history_tree.get_children():
@@ -2100,7 +2118,8 @@ class ElectricalStoreGUI:
         tree.pack(side='left', fill='both', expand=True, padx=10, pady=10)
         scrollbar.pack(side='right', fill='y', pady=10)
 
-    def show_pending_tasks(self):
+    """""
+    def show_pending_tasks(self):    
         tasks = self.system.get_pending_tasks()
 
         dialog = tk.Toplevel(self.root)
@@ -2135,6 +2154,7 @@ class ElectricalStoreGUI:
             dialog.destroy()
 
         ttk.Button(dialog, text="Procesar Tareas", command=process_tasks).pack(pady=10)
+        """""
 
     def show_sales_by_user(self):
         """Muestra ventas agrupadas por usuario"""
