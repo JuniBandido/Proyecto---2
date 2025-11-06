@@ -1565,9 +1565,36 @@ class ElectricalStoreGUI:
         entries = {}
         for i, (label, key) in enumerate(fields):
             ttk.Label(dialog, text=label).grid(row=i, column=0, padx=5, pady=5, sticky='e')
-            entry = ttk.Entry(dialog, width=30)
-            entry.grid(row=i, column=1, padx=5, pady=5, sticky='w')
-            entries[key] = entry
+            if key == "category":
+                category_combo = ttk.Combobox(dialog, values=["Nuevo", "Iluminación", "Accesorios", "Cables", "Canalización", "Ventilación", "Conectores", "Automatización", "Utilidades"], width=27)
+                category_combo.grid(row=i, column=1, padx=5, pady=5, sticky='w')
+                category_combo.set("Nuevo")
+                entries[key] = category_combo
+            elif key == "code":
+                entry = ttk.Entry(dialog, width=30)
+                entry.grid(row=i, column=1, padx=5, pady=5, sticky='w')
+                entries[key] = entry
+            elif key == "name":
+                entry = ttk.Entry(dialog, width=30)
+                entry.grid(row=i, column=1, padx=5, pady=5, sticky='w')
+                entries[key] = entry
+            elif key == "price":
+                entry = ttk.Entry(dialog, width=30)
+                entry.grid(row=i, column=1, padx=5, pady=5, sticky='w')
+                entries[key] = entry
+            elif key == "quantity":
+                entry = ttk.Entry(dialog, width=30)
+                entry.grid(row=i, column=1, padx=5, pady=5, sticky='w')
+                entries[key] = entry
+            elif key == "brand":
+                entry = ttk.Entry(dialog, width=30)
+                entry.grid(row=i, column=1, padx=5, pady=5, sticky='w')
+                entries[key] = entry
+            elif key == "description":
+                entry = ttk.Entry(dialog, width=30)
+                entry.grid(row=i, column=1, padx=5, pady=5, sticky='w')
+                entries[key] = entry
+
 
         def save_product():
             try:
@@ -1592,6 +1619,15 @@ class ElectricalStoreGUI:
                 except ValueError:
                     messagebox.showerror("Error", "Precio y cantidad deben ser números válidos y positivos")
                     return
+
+                category_box = entries['category']
+
+                current_categories = list(category_box.cget("values"))
+
+                if category not in current_categories and category != "":
+                    current_categories.append(category)
+                    current_categories = sorted(set(current_categories))
+                    category_box['values'] = current_categories
 
                 product = Product(code, name, category, price, quantity, brand, description)
                 success, message = self.system.add_product(product)
