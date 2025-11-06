@@ -647,10 +647,27 @@ class InventorySystem:
         return [Product(*row) for row in rows]
 
     def search_product_by_code(self, code):
+        if not code:
+            return None
+
+        # Buscar código exacto (sin convertir a minúsculas)
         for product in self._products:
-            if product.code == code:
+            if product.code == code:  # 🔹 Comparación exacta
                 return product
         return None
+
+    def search_products_by_code_partial(self, code_partial):
+        if not code_partial:
+            return []
+
+        results = []
+        code_partial_lower = code_partial.lower().strip()
+
+        for product in self._products:
+            if code_partial_lower in product.code.lower():
+                results.append(product)
+
+        return results
 
     def search_products_sequential(self, key, value):
         results = []
@@ -807,6 +824,40 @@ class InventorySystem:
 
                 return results
             elif current_value < value:
+                low = mid + 1
+            else:
+                high = mid - 1
+
+        return results
+    def binary_search_by_brand(self, brand):
+        #Búsqueda binaria por marca (requiere productos ordenados por marca)
+        sorted_products = self.quick_sort_products(key='brand')
+
+        low, high = 0, len(sorted_products) - 1
+        results = []
+
+        while low <= high:
+            mid = (low + high) // 2
+            current_brand = sorted_products[mid].brand.lower()
+            target_brand = brand.lower()
+
+            if current_brand == target_brand:
+                results.append(sorted_products[mid])
+
+                # Buscar hacia la izquierda
+                left = mid - 1
+                while left >= 0 and sorted_products[left].brand.lower() == target_brand:
+                    results.append(sorted_products[left])
+                    left -= 1
+
+                # Buscar hacia la derecha
+                right = mid + 1
+                while right < len(sorted_products) and sorted_products[right].brand.lower() == target_brand:
+                    results.append(sorted_products[right])
+                    right += 1
+
+                return results
+            elif current_brand < target_brand:
                 low = mid + 1
             else:
                 high = mid - 1
@@ -1893,8 +1944,11 @@ class ElectricalStoreGUI:
             return
 
         # 🔹 Validar stock
-        if product.quantity < quantity:
-            messagebox.showerror("Error", f"Stock insuficiente. Disponible: {product.quantity}")
+        available_stock = product.quantity
+        current_in_cart = sum(item['quantity'] for item in self.cart_items if item['code'] == code)
+
+        if current_in_cart + quantity > available_stock:
+            messagebox.showerror("Error",f"Stock insuficiente. Disponible: {available_stock - current_in_cart}")
             return
 
         # 🔹 Si ya está en el carrito, actualiza cantidad
@@ -1976,21 +2030,20 @@ class ElectricalStoreGUI:
                 messagebox.showwarning("Advertencia", "Se requiere NIT para ventas mayores a Q5000")
                 return
 
-        success, message = self.system.create_sale(sale_items, nit)
-        if success:
-            if messagebox.askyesno("Confirmar", f"¿Está seguro de procesar la venta?"):
-                if success:
-                    self.cart_items = []
-                    self.update_cart_display()
-                    self.sale_code_entry.delete(0, tk.END)
-                    self.sale_quantity_entry.delete(0, tk.END)
-                    self.product_info_label.config(text="")
-                    self.refresh_inventory()
-                    self.refresh_sales_history()
-                    self.update_stats()
-                else:
-                    messagebox.showerror("Error")
-            messagebox.showinfo("Éxito", message)
+        if messagebox.askyesno("Confirmar", f"¿Está seguro de procesar la venta por Q{self.current_cart_total:.2f}?"):
+            success, message = self.system.create_sale(sale_items, nit)
+            if success:
+                self.cart_items = []
+                self.update_cart_display()
+                self.sale_code_entry.delete(0, tk.END)
+                self.sale_quantity_entry.delete(0, tk.END)
+                self.product_info_label.config(text="")
+                self.refresh_inventory()
+                self.refresh_sales_history()
+                self.update_stats()
+                messagebox.showinfo("Éxito", message)
+            else:
+                messagebox.showerror("Error", message)
 
     def refresh_sales_history(self):
         for item in self.sales_history_tree.get_children():
@@ -2206,7 +2259,7 @@ class ElectricalStoreGUI:
 
     def perform_search(self):
         search_type = self.search_type.get()
-        term = self.search_term.get()
+        term = self.search_term.get().strip()
 
         if not term:
             messagebox.showwarning("Advertencia", "Ingrese un término de búsqueda")
@@ -2220,15 +2273,22 @@ class ElectricalStoreGUI:
         elif search_type == "Marca":
             results = self.system.search_products_by_brand(term)
         elif search_type == "Código":
-            product = self.system.search_product_by_code(term.upper())
-            if product:
-                results = [product]
+            # 🔹 BÚSQUEDA POR COINCIDENCIA (parcial) - case insensitive
+            results = self.system.search_products_by_code_partial(term)
+        elif search_type == "Precio":
+            try:
+                price = float(term)
+                results = [p for p in self.system.list_products()
+                           if abs(p.price - price) < 0.01]
+            except ValueError:
+                messagebox.showerror("Error", "Precio inválido")
+                return
 
-        self.display_search_results(results, f"Búsqueda Secuencial por {search_type}")
+        self.display_search_results(results, "")
 
     def perform_binary_search(self):
         search_type = self.search_type.get()
-        term = self.search_term.get()
+        term = self.search_term.get().strip()
 
         if not term:
             messagebox.showwarning("Advertencia", "Ingrese un término de búsqueda")
@@ -2246,43 +2306,38 @@ class ElectricalStoreGUI:
             except ValueError:
                 messagebox.showerror("Error", "Precio inválido")
                 return
+        elif search_type == "Código":
+            # 🔹 BÚSQUEDA EXACTA - case sensitive
+            product = self.system.search_product_by_code(term)
+            if product:
+                results = [product]
+        elif search_type == "Marca":
+            results = self.system.binary_search_by_brand(term)
 
-        self.display_search_results(results, f"Búsqueda Binaria por {search_type}")
+        self.display_search_results(results, "")
 
     def display_search_results(self, results, search_method):
+        # Limpiar resultados anteriores
         for item in self.search_results_tree.get_children():
             self.search_results_tree.delete(item)
 
+        # Mostrar resultados en el árbol principal (no en ventana nueva)
         if results:
-            messagebox.showinfo("Resultados", f"Se encontraron {len(results)} productos")
-            dialog = tk.Toplevel(self.root)
-            dialog.title("Búsqueda de producto")
-            dialog.geometry("900x500")
-            dialog.transient(self.root)
-            dialog.grab_set()
-
-            frame = ttk.Frame(dialog, padding=10)
-            frame.pack(fill="both", expand=True)
-
-            columns = ("Código", "Nombre", "Precio", "Stock", "Marca")
-            tree = ttk.Treeview(frame, columns=columns, show="headings", selectmode="browse")
-            for col in columns:
-                tree.heading(col, text=col)
-                tree.column(col, width=100)
-            tree.pack(fill="both", expand=True)
-
-            scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
-            tree.configure(yscrollcommand=scrollbar.set)
-            scrollbar.pack(side="right", fill="y")
-
-            # Insertar productos
             for product in results:
-                tree.insert("", "end", values=(
-                    product.code, product.name, f"Q{product.price:.2f}", product.quantity, product.brand
+                self.search_results_tree.insert('', 'end', values=(
+                    product.code,
+                    product.name,
+                    product.category,
+                    f"Q{product.price:.2f}",
+                    product.quantity,
+                    product.brand
                 ))
-        else:
-            messagebox.showinfo("Resultados", "No se encontraron productos")
 
+            messagebox.showinfo("Resultados",
+                                f"Se encontraron {len(results)} productos")
+        else:
+            messagebox.showinfo("Resultados",
+                                "No se encontraron productos")
     def logout(self):
         self.system.logout()
         self.show_login_screen()
