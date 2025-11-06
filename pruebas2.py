@@ -829,6 +829,7 @@ class InventorySystem:
                 high = mid - 1
 
         return results
+
     def binary_search_by_brand(self, brand):
         #Búsqueda binaria por marca (requiere productos ordenados por marca)
         sorted_products = self.quick_sort_products(key='brand')
@@ -1485,14 +1486,71 @@ class ElectricalStoreGUI:
                 f"Q{product.price:.2f}", product.quantity, product.brand
             ))
 
+    def create_overlay(self, alpha=0.4, bg="black"):
+        """Crea un overlay semitransparente y devuelve (overlay, destroy_overlay)."""
+        overlay = tk.Toplevel(self.root)
+        overlay.overrideredirect(True)
+        overlay.attributes("-alpha", alpha)
+        overlay.configure(bg=bg)
+        overlay.transient(self.root)
+
+        # Ajustar tamaño y posición al root
+        def place_overlay():
+            try:
+                overlay.geometry(
+                    f"{self.root.winfo_width()}x{self.root.winfo_height()}+"
+                    f"{self.root.winfo_rootx()}+{self.root.winfo_rooty()}"
+                )
+            except tk.TclError:
+                pass
+
+        place_overlay()
+        self.root.update_idletasks()
+
+        # Asegurar orden inicial: overlay sobre root (temporal topmost para fijar orden)
+        try:
+            overlay.lift(self.root)
+            overlay.attributes("-topmost", True)
+            overlay.update_idletasks()
+            # quitar topmost tras unos ms para no interferir con otras ventanas
+            overlay.after(50, lambda: overlay.attributes("-topmost", False))
+        except tk.TclError:
+            pass
+
+        # Reajustar si la root cambia
+        def update_overlay(event=None):
+            place_overlay()
+
+        self.root.bind("<Configure>", update_overlay)
+
+        def destroy_overlay():
+            try:
+                self.root.unbind("<Configure>")
+            except Exception:
+                pass
+            try:
+                overlay.destroy()
+            except Exception:
+                pass
+
+        return overlay, destroy_overlay
+
     def show_add_product_dialog(self):
-        self.root.attributes('-alpha', 0.5)
+        overlay, destroy_overlay = self.create_overlay(alpha=0.4, bg="black")
 
         dialog = tk.Toplevel(self.root)
         dialog.title("Agregar Producto")
         dialog.geometry("400x500")
-        dialog.transient(self.root)
+        dialog.transient(overlay)
         dialog.grab_set()
+
+        try:
+            dialog.lift()
+            dialog.attributes("-topmost", True)
+            dialog.update_idletasks()
+            dialog.after(50, lambda: dialog.attributes("-topmost", False))
+        except tk.TclError:
+            pass
 
         fields = [
             ("Código:", "code"),
@@ -1550,7 +1608,7 @@ class ElectricalStoreGUI:
                 messagebox.showerror("Error", f"Error al guardar producto: {str(e)}")
 
         def on_close():
-            self.root.attributes('-alpha', 1.0)
+            destroy_overlay()
             dialog.destroy()
 
         # Si el usuario cierra con la "X"
@@ -1572,11 +1630,34 @@ class ElectricalStoreGUI:
             messagebox.showerror("Error", "Producto no encontrado")
             return
 
+        overlay, destroy_overlay = self.create_overlay(alpha=0.4, bg="black")
+
         dialog = tk.Toplevel(self.root)
         dialog.title("Editar Producto")
         dialog.geometry("400x400")
         dialog.transient(self.root)
         dialog.grab_set()
+
+        overlay.lift(self.root)
+        dialog.lift(overlay)
+
+        def keep_order(event=None):
+            try:
+                overlay.lift(self.root)
+                dialog.lift(overlay)
+            except tk.TclError:
+                pass
+
+        dialog.bind("<FocusIn>", keep_order)
+
+        try:
+            overlay.lift(self.root)
+            dialog.lift(overlay)
+            dialog.attributes("-topmost", True)
+            dialog.after(50, lambda: dialog.attributes("-topmost", False))
+        except tk.TclError:
+            pass
+
 
         fields = [
             ("Código:", "code", product.code, True),
@@ -1615,13 +1696,16 @@ class ElectricalStoreGUI:
 
                 success, message = self.system.update_product(code, **updates)
                 if success:
-                    messagebox.showinfo("Éxito", message)
+                    messagebox.showinfo("Éxito", message, parent=overlay)
                     self.refresh_inventory()
                     dialog.destroy()
+                    destroy_overlay()
                 else:
-                    messagebox.showerror("Error", message)
+                    messagebox.showerror("Error", message, parent=overlay)
             except ValueError as e:
-                messagebox.showerror("Error", "Datos inválidos: " + str(e))
+                messagebox.showerror("Error", "Datos inválidos: " + str(e), parent=overlay)
+
+        dialog.protocol("WM_DELETE_WINDOW", lambda: (dialog.destroy(), destroy_overlay()))
 
         ttk.Button(dialog, text="Actualizar", command=update_product).grid(row=len(fields), column=1, pady=10)
 
@@ -1657,11 +1741,21 @@ class ElectricalStoreGUI:
                 ))
 
     def show_add_user_dialog(self):
+        overlay, destroy_overlay = self.create_overlay(alpha=0.4, bg="black")
+
         dialog = tk.Toplevel(self.root)
         dialog.title("Agregar Usuario")
         dialog.geometry("400x300")
-        dialog.transient(self.root)
+        dialog.transient(overlay)
         dialog.grab_set()
+
+        try:
+            dialog.lift()
+            dialog.attributes("-topmost", True)
+            dialog.update_idletasks()
+            dialog.after(50, lambda: dialog.attributes("-topmost", False))
+        except tk.TclError:
+            pass
 
         fields = [
             ("Usuario:", "username"),
@@ -1711,7 +1805,13 @@ class ElectricalStoreGUI:
             except Exception as e:
                 messagebox.showerror("Error", f"Error al crear usuario: {str(e)}")
 
-        ttk.Button(dialog, text="Guardar", command=save_user).grid(row=len(fields), column=1, pady=10)
+        def on_close():
+            destroy_overlay()
+            dialog.destroy()
+
+        dialog.protocol("WM_DELETE_WINDOW", on_close)
+
+        ttk.Button(dialog, text="Guardar", command=lambda: (save_user(), on_close())).grid(row=len(fields), column=1, pady=10)
 
     def show_edit_user_dialog(self):
         selected = self.users_tree.selection()
@@ -1732,11 +1832,33 @@ class ElectricalStoreGUI:
             messagebox.showerror("Error", "Usuario no encontrado")
             return
 
+        overlay, destroy_overlay = self.create_overlay(alpha=0.4, bg="black")
+
         dialog = tk.Toplevel(self.root)
         dialog.title("Editar Usuario")
         dialog.geometry("400x300")
         dialog.transient(self.root)
         dialog.grab_set()
+
+        overlay.lift(self.root)
+        dialog.lift(overlay)
+
+        def keep_order(event=None):
+            try:
+                overlay.lift(self.root)
+                dialog.lift(overlay)
+            except tk.TclError:
+                pass
+
+        dialog.bind("<FocusIn>", keep_order)
+
+        try:
+            overlay.lift(self.root)
+            dialog.lift(overlay)
+            dialog.attributes("-topmost", True)
+            dialog.after(50, lambda: dialog.attributes("-topmost", False))
+        except tk.TclError:
+            pass
 
         fields = [
             ("Usuario:", "username", user_to_edit.username, True),
@@ -1780,13 +1902,16 @@ class ElectricalStoreGUI:
 
                 success, message = self.system.update_user(username, **updates)
                 if success:
-                    messagebox.showinfo("Éxito", message)
+                    messagebox.showinfo("Éxito", message, parent=overlay)
+                    destroy_overlay()
                     self.refresh_users()
                     dialog.destroy()
                 else:
-                    messagebox.showerror("Error", message)
+                    messagebox.showerror("Error", message, parent=overlay)
             except Exception as e:
-                messagebox.showerror("Error", f"Error al actualizar usuario: {str(e)}")
+                messagebox.showerror("Error", f"Error al actualizar usuario: {str(e)}", parent=overlay)
+
+        dialog.protocol("WM_DELETE_WINDOW", lambda: (dialog.destroy(), destroy_overlay()))
 
         ttk.Button(dialog, text="Actualizar", command=update_user).grid(row=len(fields), column=1, pady=10)
 
@@ -1799,11 +1924,33 @@ class ElectricalStoreGUI:
         item = self.users_tree.item(selected[0])
         username = item['values'][0]
 
+        overlay, destroy_overlay = self.create_overlay(alpha=0.4, bg="black")
+
         dialog = tk.Toplevel(self.root)
         dialog.title("Cambiar Contraseña")
         dialog.geometry("300x300")
         dialog.transient(self.root)
         dialog.grab_set()
+
+        overlay.lift(self.root)
+        dialog.lift(overlay)
+
+        def keep_order(event=None):
+            try:
+                overlay.lift(self.root)
+                dialog.lift(overlay)
+            except tk.TclError:
+                pass
+
+        dialog.bind("<FocusIn>", keep_order)
+
+        try:
+            overlay.lift(self.root)
+            dialog.lift(overlay)
+            dialog.attributes("-topmost", True)
+            dialog.after(50, lambda: dialog.attributes("-topmost", False))
+        except tk.TclError:
+            pass
 
         ttk.Label(dialog, text=f"Cambiar contraseña de {username}").pack(pady=10)
 
@@ -1820,15 +1967,17 @@ class ElectricalStoreGUI:
             new_password = new_password_entry.get()
 
             if not old_password or not new_password:
-                messagebox.showerror("Error", "Ambas contraseñas son requeridas")
+                messagebox.showerror("Error", "Ambas contraseñas son requeridas", parent=overlay)
                 return
 
             success, message = self.system.change_user_password(username, old_password, new_password)
             if success:
-                messagebox.showinfo("Éxito", message)
+                messagebox.showinfo("Éxito", message, parent=overlay)
                 dialog.destroy()
+                destroy_overlay()
             else:
-                messagebox.showerror("Error", message)
+                messagebox.showerror("Error", message, parent=overlay)
+                destroy_overlay()
 
         ttk.Button(dialog, text="Cambiar Contraseña", command=change_password).pack(pady=15)
 
@@ -1851,11 +2000,21 @@ class ElectricalStoreGUI:
                 messagebox.showerror("Error", message)
 
     def show_search_products_for_sale(self, products):
+        overlay, destroy_overlay = self.create_overlay(alpha=0.4, bg="black")
+
         dialog = tk.Toplevel(self.root)
         dialog.title("Búsqueda de producto")
         dialog.geometry("900x500")
-        dialog.transient(self.root)
+        dialog.transient(overlay)
         dialog.grab_set()
+
+        try:
+            dialog.lift()
+            dialog.attributes("-topmost", True)
+            dialog.update_idletasks()
+            dialog.after(50, lambda: dialog.attributes("-topmost", False))
+        except tk.TclError:
+            pass
 
         frame = ttk.Frame(dialog, padding=10)
         frame.pack(fill="both", expand=True)
@@ -1900,7 +2059,13 @@ class ElectricalStoreGUI:
 
             dialog.destroy()
 
-        ttk.Button(dialog, text="Seleccionar", command=select_product).pack(pady=10)
+        def on_close():
+            destroy_overlay()
+            dialog.destroy()
+
+        dialog.protocol("WM_DELETE_WINDOW", on_close)
+
+        ttk.Button(dialog, text="Seleccionar", command=lambda: (select_product(), on_close())).pack(pady=10)
 
     def search_product_for_sale(self):
         search_text = self.sale_code_entry.get().strip()
@@ -2106,11 +2271,21 @@ class ElectricalStoreGUI:
     def show_low_stock(self):
         low_stock = self.system.get_low_stock_products(10)
 
+        overlay, destroy_overlay = self.create_overlay(alpha=0.4, bg="black")
+
         dialog = tk.Toplevel(self.root)
         dialog.title("Productos con Stock Bajo (<10 unidades)")
         dialog.geometry("600x400")
-        dialog.transient(self.root)
+        dialog.transient(overlay)
         dialog.grab_set()
+
+        try:
+            dialog.lift()
+            dialog.attributes("-topmost", True)
+            dialog.update_idletasks()
+            dialog.after(50, lambda: dialog.attributes("-topmost", False))
+        except tk.TclError:
+            pass
 
         if not low_stock:
             ttk.Label(dialog, text="No hay productos con stock bajo", style='Subtitle.TLabel').pack(pady=20)
@@ -2139,14 +2314,30 @@ class ElectricalStoreGUI:
         tree.pack(side='left', fill='both', expand=True, padx=10, pady=10)
         scrollbar.pack(side='right', fill='y', pady=10)
 
+        def on_close():
+            destroy_overlay()
+            dialog.destroy()
+
+        dialog.protocol("WM_DELETE_WINDOW", on_close)
+
     def show_action_history(self):
         history = self.system.get_action_history(20)
+
+        overlay, destroy_overlay = self.create_overlay(alpha=0.4, bg="black")
 
         dialog = tk.Toplevel(self.root)
         dialog.title("Historial de Acciones (Últimas 20)")
         dialog.geometry("700x400")
-        dialog.transient(self.root)
+        dialog.transient(overlay)
         dialog.grab_set()
+
+        try:
+            dialog.lift()
+            dialog.attributes("-topmost", True)
+            dialog.update_idletasks()
+            dialog.after(50, lambda: dialog.attributes("-topmost", False))
+        except tk.TclError:
+            pass
 
         if not history:
             ttk.Label(dialog, text="No hay acciones en el historial", style='Subtitle.TLabel').pack(pady=20)
@@ -2179,6 +2370,12 @@ class ElectricalStoreGUI:
 
         tree.pack(side='left', fill='both', expand=True, padx=10, pady=10)
         scrollbar.pack(side='right', fill='y', pady=10)
+
+        def on_close():
+            destroy_overlay()
+            dialog.destroy()
+
+        dialog.protocol("WM_DELETE_WINDOW", on_close)
 
     """""
     def show_pending_tasks(self):    
@@ -2222,11 +2419,21 @@ class ElectricalStoreGUI:
         """Muestra ventas agrupadas por usuario"""
         users = self.system.list_users()
 
+        overlay, destroy_overlay = self.create_overlay(alpha=0.4, bg="black")
+
         dialog = tk.Toplevel(self.root)
         dialog.title("Ventas por Usuario")
         dialog.geometry("700x500")
-        dialog.transient(self.root)
+        dialog.transient(overlay)
         dialog.grab_set()
+
+        try:
+            dialog.lift()
+            dialog.attributes("-topmost", True)
+            dialog.update_idletasks()
+            dialog.after(50, lambda: dialog.attributes("-topmost", False))
+        except tk.TclError:
+            pass
 
         if not users:
             ttk.Label(dialog, text="No hay usuarios registrados", style='Subtitle.TLabel').pack(pady=20)
@@ -2256,6 +2463,12 @@ class ElectricalStoreGUI:
 
         tree.pack(side='left', fill='both', expand=True, padx=10, pady=10)
         scrollbar.pack(side='right', fill='y', pady=10)
+
+        def on_close():
+            destroy_overlay()
+            dialog.destroy()
+
+        dialog.protocol("WM_DELETE_WINDOW", on_close)
 
     def perform_search(self):
         search_type = self.search_type.get()
