@@ -1023,6 +1023,8 @@ class ElectricalStoreGUI:
         self.setup_styles()
         self.show_login_screen()
 
+        self.categories = ["Iluminación", "Accesorios", "Cables", "Canalización", "Ventilación", "Conectores", "Automatización", "Utilidades"]
+
     def setup_styles(self):
         style = ttk.Style()
         style.configure('Title.TLabel', font=('Arial', 16, 'bold'), background="#f0f0f0")
@@ -1566,9 +1568,8 @@ class ElectricalStoreGUI:
         for i, (label, key) in enumerate(fields):
             ttk.Label(dialog, text=label).grid(row=i, column=0, padx=5, pady=5, sticky='e')
             if key == "category":
-                category_combo = ttk.Combobox(dialog, values=["Nuevo", "Iluminación", "Accesorios", "Cables", "Canalización", "Ventilación", "Conectores", "Automatización", "Utilidades"], width=27)
+                category_combo = ttk.Combobox(dialog, values=self.categories, width=27)
                 category_combo.grid(row=i, column=1, padx=5, pady=5, sticky='w')
-                category_combo.set("Nuevo")
                 entries[key] = category_combo
             elif key == "code":
                 entry = ttk.Entry(dialog, width=30)
@@ -1620,14 +1621,10 @@ class ElectricalStoreGUI:
                     messagebox.showerror("Error", "Precio y cantidad deben ser números válidos y positivos")
                     return
 
-                category_box = entries['category']
-
-                current_categories = list(category_box.cget("values"))
-
-                if category not in current_categories and category != "":
-                    current_categories.append(category)
-                    current_categories = sorted(set(current_categories))
-                    category_box['values'] = current_categories
+                if category not in self.categories and category != "":
+                    self.categories.append(category)
+                    self.categories.sort()
+                    entries['category']['values'] = self.categories
 
                 product = Product(code, name, category, price, quantity, brand, description)
                 success, message = self.system.add_product(product)
